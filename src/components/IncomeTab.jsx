@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIncome, onDeleteIncome, onAddService }) {
   const [plate, setPlate] = useState('');
@@ -12,6 +12,10 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Quick Service Modal State
   const [showQuickServiceModal, setShowQuickServiceModal] = useState(false);
@@ -94,6 +98,13 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     (inc.service_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (inc.staff_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredIncomes.length / itemsPerPage) || 1;
+  const paginatedIncomes = filteredIncomes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="form-grid-responsive">
@@ -344,7 +355,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
                 </tr>
               </thead>
               <tbody>
-                {filteredIncomes.map((inc) => (
+                {paginatedIncomes.map((inc) => (
                   <tr key={inc.id}>
                     <td style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{inc.date}</td>
                     <td>
@@ -378,6 +389,31 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredIncomes.length > itemsPerPage && (
+          <div className="flex-between mt-4" style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            >
+              <ChevronLeft size={16} /> Önceki
+            </button>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Sayfa <b>{currentPage}</b> / {totalPages} (Toplam {filteredIncomes.length} Kayıt)
+            </span>
+            <button
+              className="btn btn-secondary btn-sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              style={{ opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Sonraki <ChevronRight size={16} />
+            </button>
           </div>
         )}
       </div>

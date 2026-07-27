@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MinusCircle, Search, Trash2, CheckCircle2, Tag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MinusCircle, Search, Trash2, CheckCircle2, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
   'Kira',
@@ -21,6 +21,10 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('Tümü');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +61,13 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
     const matchesCategory = selectedCategoryFilter === 'Tümü' || exp.category === selectedCategoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategoryFilter]);
+
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
+  const paginatedExpenses = filteredExpenses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="form-grid-responsive">
@@ -209,7 +220,7 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredExpenses.map((exp) => (
+                {paginatedExpenses.map((exp) => (
                   <tr key={exp.id}>
                     <td style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{exp.date}</td>
                     <td>
@@ -240,6 +251,31 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredExpenses.length > itemsPerPage && (
+          <div className="flex-between mt-4" style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            >
+              <ChevronLeft size={16} /> Önceki
+            </button>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Sayfa <b>{currentPage}</b> / {totalPages} (Toplam {filteredExpenses.length} Kayıt)
+            </span>
+            <button
+              className="btn btn-secondary btn-sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              style={{ opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Sonraki <ChevronRight size={16} />
+            </button>
           </div>
         )}
       </div>
