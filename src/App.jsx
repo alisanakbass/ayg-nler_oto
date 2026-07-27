@@ -147,19 +147,14 @@ export default function App() {
           )}
 
           {activeTab === 'settings' && (
-            <div>
-              <SupabaseSettingsModal onClose={() => setActiveTab('dashboard')} />
-              <div className="mt-4">
-                <ServicesStaffTab
-                  services={services}
-                  staffList={staffList}
-                  onAddService={handleAddService}
-                  onDeleteService={handleDeleteService}
-                  onAddStaff={handleAddStaff}
-                  onDeleteStaff={handleDeleteStaff}
-                />
-              </div>
-            </div>
+            <ServicesStaffTab
+              services={services}
+              staffList={staffList}
+              onAddService={handleAddService}
+              onDeleteService={handleDeleteService}
+              onAddStaff={handleAddStaff}
+              onDeleteStaff={handleDeleteStaff}
+            />
           )}
         </main>
       )}
