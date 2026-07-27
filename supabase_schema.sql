@@ -77,3 +77,12 @@ CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.service
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.incomes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.expenses FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.staff FOR ALL USING (true) WITH CHECK (true);
+
+-- ========================================================
+-- PERFORMANS İNDEKLERİ (Hızlı Plaka & Tarih Sorguları)
+-- ========================================================
+CREATE INDEX IF NOT EXISTS idx_incomes_plate ON public.incomes (plate);
+CREATE INDEX IF NOT EXISTS idx_incomes_date ON public.incomes (date DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON public.expenses (date DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_category ON public.expenses (category);
+

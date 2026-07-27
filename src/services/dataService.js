@@ -34,17 +34,29 @@ const setLocal = (key, val) => {
   localStorage.setItem(key, JSON.stringify(val));
 };
 
+// In-memory cache for ultra-fast tab switches
+let serviceCache = null;
+let staffCache = null;
+
 export const dataService = {
   // Hizmetler (Services)
   async getServices() {
+    if (serviceCache) return serviceCache;
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('services').select('*').order('price', { ascending: true });
-      if (!error && data) return data;
+      if (!error && data) {
+        serviceCache = data;
+        setLocal('aygun_services', data);
+        return data;
+      }
     }
-    return getLocal('aygun_services', INITIAL_SERVICES);
+    const localData = getLocal('aygun_services', INITIAL_SERVICES);
+    serviceCache = localData;
+    return localData;
   },
 
   async addService(service) {
+    serviceCache = null; // Invalidate cache
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('services').insert([service]).select();
       if (!error && data) return data[0];
@@ -57,6 +69,7 @@ export const dataService = {
   },
 
   async deleteService(id) {
+    serviceCache = null; // Invalidate cache
     if (isSupabaseConfigured) {
       await supabase.from('services').delete().eq('id', id);
       return true;
@@ -145,14 +158,22 @@ export const dataService = {
 
   // Personel (Staff)
   async getStaff() {
+    if (staffCache) return staffCache;
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('staff').select('*').order('name', { ascending: true });
-      if (!error && data) return data;
+      if (!error && data) {
+        staffCache = data;
+        setLocal('aygun_staff', data);
+        return data;
+      }
     }
-    return getLocal('aygun_staff', INITIAL_STAFF);
+    const localData = getLocal('aygun_staff', INITIAL_STAFF);
+    staffCache = localData;
+    return localData;
   },
 
   async addStaff(person) {
+    staffCache = null; // Invalidate cache
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('staff').insert([person]).select();
       if (!error && data) return data[0];
@@ -165,6 +186,7 @@ export const dataService = {
   },
 
   async deleteStaff(id) {
+    staffCache = null; // Invalidate cache
     if (isSupabaseConfigured) {
       await supabase.from('staff').delete().eq('id', id);
       return true;

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { Dashboard } from './components/Dashboard';
 import { IncomeTab } from './components/IncomeTab';
 import { ExpenseTab } from './components/ExpenseTab';
-import { ReportsTab } from './components/ReportsTab';
-import { ServicesStaffTab } from './components/ServicesStaffTab';
-import { SupabaseSettingsModal } from './components/SupabaseSettingsModal';
 import { dataService } from './services/dataService';
+
+const ReportsTab = lazy(() => import('./components/ReportsTab').then(m => ({ default: m.ReportsTab })));
+const ServicesStaffTab = lazy(() => import('./components/ServicesStaffTab').then(m => ({ default: m.ServicesStaffTab })));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -128,34 +128,40 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'reports' && (
-            <ReportsTab
-              incomes={incomes}
-              expenses={expenses}
-            />
-          )}
+          <Suspense fallback={
+            <div className="flex-center" style={{ minHeight: '200px', color: 'var(--text-secondary)' }}>
+              Yükleniyor...
+            </div>
+          }>
+            {activeTab === 'reports' && (
+              <ReportsTab
+                incomes={incomes}
+                expenses={expenses}
+              />
+            )}
 
-          {activeTab === 'services_staff' && (
-            <ServicesStaffTab
-              services={services}
-              staffList={staffList}
-              onAddService={handleAddService}
-              onDeleteService={handleDeleteService}
-              onAddStaff={handleAddStaff}
-              onDeleteStaff={handleDeleteStaff}
-            />
-          )}
+            {activeTab === 'services_staff' && (
+              <ServicesStaffTab
+                services={services}
+                staffList={staffList}
+                onAddService={handleAddService}
+                onDeleteService={handleDeleteService}
+                onAddStaff={handleAddStaff}
+                onDeleteStaff={handleDeleteStaff}
+              />
+            )}
 
-          {activeTab === 'settings' && (
-            <ServicesStaffTab
-              services={services}
-              staffList={staffList}
-              onAddService={handleAddService}
-              onDeleteService={handleDeleteService}
-              onAddStaff={handleAddStaff}
-              onDeleteStaff={handleDeleteStaff}
-            />
-          )}
+            {activeTab === 'settings' && (
+              <ServicesStaffTab
+                services={services}
+                staffList={staffList}
+                onAddService={handleAddService}
+                onDeleteService={handleDeleteService}
+                onAddStaff={handleAddStaff}
+                onDeleteStaff={handleDeleteStaff}
+              />
+            )}
+          </Suspense>
         </main>
       )}
 
