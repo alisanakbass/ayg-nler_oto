@@ -16,10 +16,15 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   // Multi-Select Services State
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
 
-  // Input Refs for ENTER navigation
+  // Input Refs for Sequential ENTER Navigation
   const plateInputRef = useRef(null);
+  const vehicleTypeSelectRef = useRef(null);
+  const serviceNameInputRef = useRef(null);
   const amountInputRef = useRef(null);
   const paymentSelectRef = useRef(null);
+  const staffSelectRef = useRef(null);
+  const dateInputRef = useRef(null);
+  const noteInputRef = useRef(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,8 +86,22 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     setPlate(val);
   };
 
-  // ENTER Key Navigation Handlers
+  // Sequential ENTER Key Handlers
   const handlePlateKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      vehicleTypeSelectRef.current?.focus();
+    }
+  };
+
+  const handleVehicleTypeKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      serviceNameInputRef.current?.focus();
+    }
+  };
+
+  const handleServiceNameKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       amountInputRef.current?.focus();
@@ -99,6 +118,27 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const handlePaymentKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      staffSelectRef.current?.focus();
+    }
+  };
+
+  const handleStaffKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      dateInputRef.current?.focus();
+    }
+  };
+
+  const handleDateKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      noteInputRef.current?.focus();
+    }
+  };
+
+  const handleNoteKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
       handleSubmit(e);
     }
   };
@@ -112,6 +152,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     }
     if (!serviceName.trim()) {
       alert('Lütfen yapılan hizmeti seçiniz veya yazınız.');
+      serviceNameInputRef.current?.focus();
       return;
     }
     if (!amount || Number(amount) <= 0) {
@@ -142,7 +183,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     setSuccessMessage(`${plate.trim()} plakalı araç yıkama kaydı başarıyla eklendi!`);
     setTimeout(() => setSuccessMessage(''), 4000);
 
-    // Re-focus back to Plate input for ultra-fast next entry
+    // Re-focus back to Plate input for next entry
     setTimeout(() => {
       plateInputRef.current?.focus();
     }, 100);
@@ -185,10 +226,10 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Plaka & Araç Tipi */}
+          {/* 1. Plaka & 2. Araç Tipi */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Araç Plakası (ENTER ↵ ile İlerle)</label>
+              <label className="form-label">1. Araç Plakası (ENTER ↵)</label>
               <input
                 ref={plateInputRef}
                 type="text"
@@ -203,11 +244,13 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
 
             <div className="form-group">
-              <label className="form-label">Araç Tipi</label>
+              <label className="form-label">2. Araç Tipi (ENTER ↵)</label>
               <select
+                ref={vehicleTypeSelectRef}
                 className="form-control"
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
+                onKeyDown={handleVehicleTypeKeyDown}
               >
                 <option value="Binek">Binek Otomobil</option>
                 <option value="SUV / Arazi">SUV / Arazi</option>
@@ -217,11 +260,11 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* Hizmet Seçim Hızlı Chip'leri (Çoklu Seçim Özellikli) */}
+          {/* 3. Hizmet Seçim Hızlı Chip'leri */}
           <div className="form-group">
             <div className="flex-between mb-2">
               <label className="form-label" style={{ marginBottom: 0 }}>
-                Hızlı Hizmet Seçimi <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>(Birden fazla seçilebilir)</span>
+                3. Hızlı Hizmet Seçimi <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>(Çoklu Seçilebilir)</span>
               </label>
               <button
                 type="button"
@@ -289,22 +332,24 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* Hizmet Adı & Tutar Manuel Input */}
+          {/* 4. Hizmet Adı & 5. Tutar Manuel Input */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Seçili Hizmet(ler) *</label>
+              <label className="form-label">4. Hizmet Tanımı (ENTER ↵)</label>
               <input
+                ref={serviceNameInputRef}
                 type="text"
                 className="form-control"
                 placeholder="İç-Dış Yıkama, Pasta Cila..."
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
+                onKeyDown={handleServiceNameKeyDown}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Toplam Tutar (TL) * (ENTER ↵ ile İlerle)</label>
+              <label className="form-label">5. Toplam Tutar (TL) * (ENTER ↵)</label>
               <input
                 ref={amountInputRef}
                 type="number"
@@ -319,10 +364,10 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* Ödeme Türü & Personel */}
+          {/* 6. Ödeme Türü & 7. Personel */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Ödeme Yöntemi (ENTER ↵ ile Kaydet)</label>
+              <label className="form-label">6. Ödeme Yöntemi (ENTER ↵)</label>
               <select
                 ref={paymentSelectRef}
                 className="form-control"
@@ -337,11 +382,13 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
 
             <div className="form-group">
-              <label className="form-label">Yıkayan Personel</label>
+              <label className="form-label">7. Yıkayan Personel (ENTER ↵)</label>
               <select
+                ref={staffSelectRef}
                 className="form-control"
                 value={staffName}
                 onChange={(e) => setStaffName(e.target.value)}
+                onKeyDown={handleStaffKeyDown}
               >
                 <option value="">-- Personel Seçin (Opsiyonel) --</option>
                 {staffList.map(st => (
@@ -351,26 +398,30 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* Tarih & Not */}
+          {/* 8. Tarih & 9. Not */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">İşlem Tarihi</label>
+              <label className="form-label">8. İşlem Tarihi (ENTER ↵)</label>
               <input
+                ref={dateInputRef}
                 type="date"
                 className="form-control"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                onKeyDown={handleDateKeyDown}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Not / Açıklama</label>
+              <label className="form-label">9. Not / Açıklama (ENTER ↵ ile KAYDET)</label>
               <input
+                ref={noteInputRef}
                 type="text"
                 className="form-control"
                 placeholder="Ekstra istekler..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
+                onKeyDown={handleNoteKeyDown}
               />
             </div>
           </div>
