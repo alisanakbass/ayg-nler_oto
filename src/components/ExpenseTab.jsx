@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MinusCircle, Search, Trash2, CheckCircle2, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
@@ -22,18 +22,71 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('Tümü');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Input Refs for Sequential ENTER Navigation
+  const titleInputRef = useRef(null);
+  const categorySelectRef = useRef(null);
+  const amountInputRef = useRef(null);
+  const paymentSelectRef = useRef(null);
+  const dateInputRef = useRef(null);
+  const noteInputRef = useRef(null);
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Sequential ENTER Key Handlers
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      categorySelectRef.current?.focus();
+    }
+  };
+
+  const handleCategoryKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      amountInputRef.current?.focus();
+    }
+  };
+
+  const handleAmountKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      paymentSelectRef.current?.focus();
+    }
+  };
+
+  const handlePaymentKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      dateInputRef.current?.focus();
+    }
+  };
+
+  const handleDateKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      noteInputRef.current?.focus();
+    }
+  };
+
+  const handleNoteKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!title.trim()) {
       alert('Lütfen gider başlığını giriniz.');
+      titleInputRef.current?.focus();
       return;
     }
     if (!amount || Number(amount) <= 0) {
       alert('Lütfen geçerli bir tutar giriniz.');
+      amountInputRef.current?.focus();
       return;
     }
 
@@ -53,6 +106,10 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
     setNote('');
     setSuccessMessage(`${title.trim()} gider kaydı eklendi!`);
     setTimeout(() => setSuccessMessage(''), 4000);
+
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 100);
   };
 
   const filteredExpenses = expenses.filter(exp => {
@@ -89,24 +146,29 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Gider Başlığı / Açıklama *</label>
+            <label className="form-label">1. Gider Başlığı / Açıklama * (ENTER ↵)</label>
             <input
+              ref={titleInputRef}
               type="text"
               className="form-control"
               placeholder="Örn: 20L Şampuan Alımı, Dükkan Kirası, Elektrik Faturası"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
+              autoFocus
               required
             />
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Gider Kategorisi</label>
+              <label className="form-label">2. Gider Kategorisi (ENTER ↵)</label>
               <select
+                ref={categorySelectRef}
                 className="form-control"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                onKeyDown={handleCategoryKeyDown}
               >
                 {EXPENSE_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -115,14 +177,16 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Tutar (TL) *</label>
+              <label className="form-label">3. Tutar (TL) * (ENTER ↵)</label>
               <input
+                ref={amountInputRef}
                 type="number"
                 step="0.01"
                 className="form-control"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleAmountKeyDown}
                 required
               />
             </div>
@@ -130,11 +194,13 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
 
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Ödeme Yöntemi</label>
+              <label className="form-label">4. Ödeme Yöntemi (ENTER ↵)</label>
               <select
+                ref={paymentSelectRef}
                 className="form-control"
                 value={paymentType}
                 onChange={(e) => setPaymentType(e.target.value)}
+                onKeyDown={handlePaymentKeyDown}
               >
                 <option value="Nakit">Nakit</option>
                 <option value="Kredi Kartı">Kredi Kartı</option>
@@ -143,29 +209,33 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">İşlem Tarihi</label>
+              <label className="form-label">5. İşlem Tarihi (ENTER ↵)</label>
               <input
+                ref={dateInputRef}
                 type="date"
                 className="form-control"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                onKeyDown={handleDateKeyDown}
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Ek Not / Fiş No</label>
+            <label className="form-label">6. Ek Not / Fiş No (ENTER ↵ ile KAYDET)</label>
             <input
+              ref={noteInputRef}
               type="text"
               className="form-control"
               placeholder="Fiş veya fatura numarası ekleyin..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              onKeyDown={handleNoteKeyDown}
             />
           </div>
 
           <button type="submit" className="btn btn-danger btn-full mt-4">
-            Gider Kaydını Ekle
+            Gider Kaydını Ekle (ENTER ↵)
           </button>
         </form>
       </div>

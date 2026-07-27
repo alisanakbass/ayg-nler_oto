@@ -1,37 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Tag, Users, Plus, Trash2, CheckCircle2, DollarSign } from 'lucide-react';
 
 export function ServicesStaffTab({ services = [], staffList = [], onAddService, onDeleteService, onAddStaff, onDeleteStaff }) {
-  // Service Form State
+  // Service Form State & Refs
   const [srvName, setSrvName] = useState('');
   const [srvType, setSrvType] = useState('Binek');
   const [srvPrice, setSrvPrice] = useState('');
 
-  // Staff Form State
+  const srvNameRef = useRef(null);
+  const srvTypeRef = useRef(null);
+  const srvPriceRef = useRef(null);
+
+  // Staff Form State & Refs
   const [staffName, setStaffName] = useState('');
   const [staffPhone, setStaffPhone] = useState('');
   const [staffComm, setStaffComm] = useState('10');
 
+  const staffNameRef = useRef(null);
+  const staffPhoneRef = useRef(null);
+  const staffCommRef = useRef(null);
+
   const [msg, setMsg] = useState('');
 
+  // Service Form ENTER Navigation
+  const handleSrvNameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      srvTypeRef.current?.focus();
+    }
+  };
+
+  const handleSrvTypeKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      srvPriceRef.current?.focus();
+    }
+  };
+
+  const handleSrvPriceKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCreateService(e);
+    }
+  };
+
   const handleCreateService = async (e) => {
-    e.preventDefault();
-    if (!srvName || !srvPrice) return;
+    if (e) e.preventDefault();
+    if (!srvName || !srvPrice) {
+      alert('Lütfen hizmet tanımı ve fiyatını giriniz.');
+      srvNameRef.current?.focus();
+      return;
+    }
     await onAddService({ name: srvName.trim(), vehicle_type: srvType, price: Number(srvPrice) });
     setSrvName('');
     setSrvPrice('');
-    setMsg('Hizmet eklendi!');
+    setMsg('Yeni hizmet tanımlandı!');
     setTimeout(() => setMsg(''), 3000);
+    setTimeout(() => srvNameRef.current?.focus(), 100);
+  };
+
+  // Staff Form ENTER Navigation
+  const handleStaffNameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      staffPhoneRef.current?.focus();
+    }
+  };
+
+  const handleStaffPhoneKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      staffCommRef.current?.focus();
+    }
+  };
+
+  const handleStaffCommKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCreateStaff(e);
+    }
   };
 
   const handleCreateStaff = async (e) => {
-    e.preventDefault();
-    if (!staffName) return;
+    if (e) e.preventDefault();
+    if (!staffName) {
+      alert('Lütfen personel adını giriniz.');
+      staffNameRef.current?.focus();
+      return;
+    }
     await onAddStaff({ name: staffName.trim(), phone: staffPhone.trim(), commission_rate: Number(staffComm) });
     setStaffName('');
     setStaffPhone('');
-    setMsg('Personel eklendi!');
+    setMsg('Yeni personel eklendi!');
     setTimeout(() => setMsg(''), 3000);
+    setTimeout(() => staffNameRef.current?.focus(), 100);
   };
 
   return (
@@ -54,20 +116,29 @@ export function ServicesStaffTab({ services = [], staffList = [], onAddService, 
         <form onSubmit={handleCreateService} className="mb-4">
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Hizmet Tanımı</label>
+              <label className="form-label">Hizmet Tanımı (ENTER ↵)</label>
               <input
+                ref={srvNameRef}
                 type="text"
                 className="form-control"
                 placeholder="Örn: Seramik Kaplama"
                 value={srvName}
                 onChange={(e) => setSrvName(e.target.value)}
+                onKeyDown={handleSrvNameKeyDown}
+                autoFocus
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Araç Tipi</label>
-              <select className="form-control" value={srvType} onChange={(e) => setSrvType(e.target.value)}>
+              <label className="form-label">Araç Tipi (ENTER ↵)</label>
+              <select
+                ref={srvTypeRef}
+                className="form-control"
+                value={srvType}
+                onChange={(e) => setSrvType(e.target.value)}
+                onKeyDown={handleSrvTypeKeyDown}
+              >
                 <option value="Binek">Binek</option>
                 <option value="SUV / Arazi">SUV / Arazi</option>
                 <option value="Ticari / Minibüs">Ticari</option>
@@ -76,19 +147,21 @@ export function ServicesStaffTab({ services = [], staffList = [], onAddService, 
           </div>
 
           <div className="form-group">
-            <label className="form-label">Fiyat (TL)</label>
+            <label className="form-label">Fiyat (TL) (ENTER ↵ ile KAYDET)</label>
             <input
+              ref={srvPriceRef}
               type="number"
               className="form-control"
               placeholder="0.00"
               value={srvPrice}
               onChange={(e) => setSrvPrice(e.target.value)}
+              onKeyDown={handleSrvPriceKeyDown}
               required
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-full">
-            <Plus size={18} /> Yeni Hizmet Ekle
+            <Plus size={18} /> Yeni Hizmet Ekle (ENTER ↵)
           </button>
         </form>
 
@@ -132,42 +205,48 @@ export function ServicesStaffTab({ services = [], staffList = [], onAddService, 
         <form onSubmit={handleCreateStaff} className="mb-4">
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Personel Adı</label>
+              <label className="form-label">Personel Adı (ENTER ↵)</label>
               <input
+                ref={staffNameRef}
                 type="text"
                 className="form-control"
                 placeholder="Örn: Ahmet Usta"
                 value={staffName}
                 onChange={(e) => setStaffName(e.target.value)}
+                onKeyDown={handleStaffNameKeyDown}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Telefon (Opsiyonel)</label>
+              <label className="form-label">Telefon (ENTER ↵)</label>
               <input
+                ref={staffPhoneRef}
                 type="text"
                 className="form-control"
                 placeholder="0555..."
                 value={staffPhone}
                 onChange={(e) => setStaffPhone(e.target.value)}
+                onKeyDown={handleStaffPhoneKeyDown}
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Prim Oranı (%)</label>
+            <label className="form-label">Prim Oranı (%) (ENTER ↵ ile KAYDET)</label>
             <input
+              ref={staffCommRef}
               type="number"
               className="form-control"
               placeholder="10"
               value={staffComm}
               onChange={(e) => setStaffComm(e.target.value)}
+              onKeyDown={handleStaffCommKeyDown}
             />
           </div>
 
           <button type="submit" className="btn btn-secondary btn-full">
-            <Plus size={18} /> Personel Ekle
+            <Plus size={18} /> Personel Ekle (ENTER ↵)
           </button>
         </form>
 
