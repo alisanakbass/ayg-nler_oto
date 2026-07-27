@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MinusCircle, Search, Trash2, CheckCircle2, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MinusCircle, CheckCircle2 } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
   'Kira',
@@ -11,15 +11,13 @@ const EXPENSE_CATEGORIES = [
   'Diğer'
 ];
 
-export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
+export function ExpenseTab({ onAddExpense }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Malzeme & Kimyasal');
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState('Nakit');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('Tümü');
   const [successMessage, setSuccessMessage] = useState('');
 
   // Input Refs for Sequential ENTER Navigation
@@ -29,10 +27,6 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
   const paymentSelectRef = useRef(null);
   const dateInputRef = useRef(null);
   const noteInputRef = useRef(null);
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   // Sequential ENTER Key Handlers
   const handleTitleKeyDown = (e) => {
@@ -112,34 +106,20 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
     }, 100);
   };
 
-  const filteredExpenses = expenses.filter(exp => {
-    const matchesSearch = (exp.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (exp.note || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategoryFilter === 'Tümü' || exp.category === selectedCategoryFilter;
-    return matchesSearch && matchesCategory;
-  });
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategoryFilter]);
-
-  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
-  const paginatedExpenses = filteredExpenses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
   return (
-    <div className="form-grid-responsive">
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {/* Gider Ekle Formu */}
       <div className="glass-card">
         <div className="flex-between mb-4">
-          <h2 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <MinusCircle size={22} className="text-rose" />
+          <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <MinusCircle size={24} className="text-rose" />
             Yeni Gider Girişi
           </h2>
         </div>
 
         {successMessage && (
-          <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid var(--accent-rose)', padding: '12px', borderRadius: '10px', color: 'var(--accent-rose)', fontSize: '0.875rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={18} />
+          <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid var(--accent-rose)', padding: '14px', borderRadius: '10px', color: 'var(--accent-rose)', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={20} />
             {successMessage}
           </div>
         )}
@@ -234,120 +214,10 @@ export function ExpenseTab({ expenses = [], onAddExpense, onDeleteExpense }) {
             />
           </div>
 
-          <button type="submit" className="btn btn-danger btn-full mt-4">
+          <button type="submit" className="btn btn-danger btn-full mt-4" style={{ padding: '16px', fontSize: '1.05rem' }}>
             Gider Kaydını Ekle (ENTER ↵)
           </button>
         </form>
-      </div>
-
-      {/* Kayıtlı Giderler Listesi */}
-      <div className="glass-card">
-        <div className="flex-between mb-4">
-          <h2 style={{ fontSize: '1.2rem' }}>Gider Geçmişi</h2>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            {expenses.length} Kayıt
-          </span>
-        </div>
-
-        {/* Filter Controls */}
-        <div className="form-grid mb-4">
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              className="form-control"
-              style={{ paddingLeft: '38px' }}
-              placeholder="Gider başlığı ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <select
-            className="form-control"
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-          >
-            <option value="Tümü">Tüm Kategoriler</option>
-            {EXPENSE_CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
-        {filteredExpenses.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Gider kaydı bulunamadı.</p>
-        ) : (
-          <div className="table-responsive" style={{ maxHeight: '520px', overflowY: 'auto' }}>
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>Tarih</th>
-                  <th>Gider Başlığı</th>
-                  <th>Kategori</th>
-                  <th>Tutar</th>
-                  <th>Sil</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedExpenses.map((exp) => (
-                  <tr key={exp.id}>
-                    <td style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{exp.date}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{exp.title}</div>
-                      {exp.note && <small style={{ color: 'var(--text-muted)' }}>{exp.note}</small>}
-                    </td>
-                    <td>
-                      <span className="pay-pill" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
-                        {exp.category}
-                      </span>
-                    </td>
-                    <td className="text-rose" style={{ fontWeight: 700 }}>
-                      -₺{Number(exp.amount).toLocaleString('tr-TR')}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => {
-                          if (confirm(`${exp.title} giderini silmek istediğinize emin misiniz?`)) {
-                            onDeleteExpense(exp.id);
-                          }
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination Controls */}
-        {filteredExpenses.length > itemsPerPage && (
-          <div className="flex-between mt-4" style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-            >
-              <ChevronLeft size={16} /> Önceki
-            </button>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              Sayfa <b>{currentPage}</b> / {totalPages} (Toplam {filteredExpenses.length} Kayıt)
-            </span>
-            <button
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              style={{ opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-            >
-              Sonraki <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

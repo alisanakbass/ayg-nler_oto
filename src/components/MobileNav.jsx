@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, MinusCircle, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, MinusCircle, History, BarChart3, Settings } from 'lucide-react';
 
 export function MobileNav({ activeTab, setActiveTab }) {
   return (
@@ -26,11 +26,18 @@ export function MobileNav({ activeTab, setActiveTab }) {
         Gider
       </button>
       <button
+        className={`mobile-nav-item ${activeTab === 'history' ? 'active' : ''}`}
+        onClick={() => setActiveTab('history')}
+      >
+        <History size={20} />
+        Geçmiş
+      </button>
+      <button
         className={`mobile-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
         onClick={() => setActiveTab('reports')}
       >
         <BarChart3 size={20} />
-        Raporlar
+        Rapor
       </button>
       <button
         className={`mobile-nav-item ${activeTab === 'settings' ? 'active' : ''}`}

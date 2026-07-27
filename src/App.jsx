@@ -6,6 +6,7 @@ import { IncomeTab } from './components/IncomeTab';
 import { ExpenseTab } from './components/ExpenseTab';
 import { dataService } from './services/dataService';
 
+const HistoryTab = lazy(() => import('./components/HistoryTab').then(m => ({ default: m.HistoryTab })));
 const ReportsTab = lazy(() => import('./components/ReportsTab').then(m => ({ default: m.ReportsTab })));
 const ServicesStaffTab = lazy(() => import('./components/ServicesStaffTab').then(m => ({ default: m.ServicesStaffTab })));
 
@@ -132,6 +133,15 @@ export default function App() {
               Yükleniyor...
             </div>
           }>
+            {activeTab === 'history' && (
+              <HistoryTab
+                incomes={incomes}
+                expenses={expenses}
+                onDeleteIncome={handleDeleteIncome}
+                onDeleteExpense={handleDeleteExpense}
+              />
+            )}
+
             {activeTab === 'reports' && (
               <ReportsTab
                 incomes={incomes}

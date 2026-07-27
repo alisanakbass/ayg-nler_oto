@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Database, Sparkles, LayoutDashboard, PlusCircle, MinusCircle, BarChart3, Settings } from 'lucide-react';
+import { Car, Database, Sparkles, LayoutDashboard, PlusCircle, MinusCircle, History, BarChart3, Settings } from 'lucide-react';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 export function Header({ activeTab, setActiveTab, onOpenSettings }) {
@@ -37,6 +37,13 @@ export function Header({ activeTab, setActiveTab, onOpenSettings }) {
         >
           <MinusCircle size={18} />
           Gider Ekle
+        </button>
+        <button
+          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          <History size={18} />
+          İşlem Geçmişi
         </button>
         <button
           className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}

@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { PlusCircle, CheckCircle2, Sparkles, Plus, X } from 'lucide-react';
 
-export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIncome, onDeleteIncome, onAddService }) {
+export function IncomeTab({ services = [], onAddIncome, onAddService }) {
   const [plate, setPlate] = useState('');
   const [vehicleType, setVehicleType] = useState('Binek');
   const [serviceName, setServiceName] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState('Nakit');
-  const [staffName, setStaffName] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   // Multi-Select Services State
@@ -22,13 +20,8 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const serviceNameInputRef = useRef(null);
   const amountInputRef = useRef(null);
   const paymentSelectRef = useRef(null);
-  const staffSelectRef = useRef(null);
   const dateInputRef = useRef(null);
   const noteInputRef = useRef(null);
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   // Quick Service Modal State
   const [showQuickServiceModal, setShowQuickServiceModal] = useState(false);
@@ -160,7 +153,6 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
       service_name: serviceName,
       amount: Number(amount),
       payment_type: paymentType,
-      staff_name: staffName,
       note: note.trim(),
       date
     };
@@ -182,38 +174,25 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     }, 100);
   };
 
-  const filteredIncomes = incomes.filter(inc => 
-    (inc.plate || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inc.service_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inc.staff_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const totalPages = Math.ceil(filteredIncomes.length / itemsPerPage) || 1;
-  const paginatedIncomes = filteredIncomes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
   return (
-    <div className="form-grid-responsive">
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {/* Gelir Ekle Formu */}
       <div className="glass-card">
         <div className="flex-between mb-4">
-          <h2 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PlusCircle size={22} className="text-emerald" />
+          <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <PlusCircle size={24} className="text-emerald" />
             Hızlı Yıkama & Gelir Girişi
           </h2>
           {plate && (
-            <div className="plate-badge" style={{ fontSize: '1rem' }}>
+            <div className="plate-badge" style={{ fontSize: '1.1rem' }}>
               {plate}
             </div>
           )}
         </div>
 
         {successMessage && (
-          <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid var(--accent-emerald)', padding: '12px', borderRadius: '10px', color: 'var(--accent-emerald)', fontSize: '0.875rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={18} />
+          <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid var(--accent-emerald)', padding: '14px', borderRadius: '10px', color: 'var(--accent-emerald)', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={20} />
             {successMessage}
           </div>
         )}
@@ -290,6 +269,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
                     <option value="Binek">Binek</option>
                     <option value="SUV / Arazi">SUV / Arazi</option>
                     <option value="Ticari / Minibüs">Ticari</option>
+                    <option value="Motosiklet">Motosiklet</option>
                   </select>
                 </div>
                 <div className="flex-between gap-2">
@@ -357,7 +337,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* 6. Ödeme Türü & 7. Tarih & 8. Not */}
+          {/* 6. Ödeme Türü & 7. Tarih */}
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">6. Ödeme Yöntemi (ENTER ↵)</label>
@@ -400,114 +380,11 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             />
           </div>
 
-          <button type="submit" className="btn btn-emerald btn-full mt-4">
-            <Sparkles size={18} />
+          <button type="submit" className="btn btn-emerald btn-full mt-4" style={{ padding: '16px', fontSize: '1.05rem' }}>
+            <Sparkles size={20} />
             Yıkama Kaydını Kaydet (ENTER ↵)
           </button>
         </form>
-      </div>
-
-      {/* Kayıtlı Gelirler Listesi */}
-      <div className="glass-card">
-        <div className="flex-between mb-4">
-          <h2 style={{ fontSize: '1.2rem' }}>Gelir Geçmişi</h2>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Toplam: {incomes.length} Kayıt
-          </span>
-        </div>
-
-        {/* Search Input */}
-        <div className="form-group mb-4">
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              className="form-control"
-              style={{ paddingLeft: '38px' }}
-              placeholder="Plaka veya Hizmet Ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {filteredIncomes.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Aramaya uygun gelir kaydı bulunamadı.</p>
-        ) : (
-          <div className="table-responsive" style={{ maxHeight: '520px', overflowY: 'auto' }}>
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>Tarih</th>
-                  <th>Plaka</th>
-                  <th>Hizmet</th>
-                  <th>Ödeme</th>
-                  <th>Tutar</th>
-                  <th>Sil</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedIncomes.map((inc) => (
-                  <tr key={inc.id}>
-                    <td style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{inc.date}</td>
-                    <td>
-                      <span className="plate-badge">{inc.plate}</span>
-                    </td>
-                    <td>
-                      <div>{inc.service_name}</div>
-                      {inc.staff_name && <small style={{ color: 'var(--accent-cyan)' }}>{inc.staff_name}</small>}
-                    </td>
-                    <td>
-                      <span className={`pay-pill ${(inc.payment_type || '').toLowerCase().replace(' ', '')}`}>
-                        {inc.payment_type}
-                      </span>
-                    </td>
-                    <td className="text-emerald" style={{ fontWeight: 700 }}>
-                      ₺{Number(inc.amount).toLocaleString('tr-TR')}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => {
-                          if (confirm(`${inc.plate} plakalı ${inc.amount} TL kaydını silmek istediğinize emin misiniz?`)) {
-                            onDeleteIncome(inc.id);
-                          }
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination Controls */}
-        {filteredIncomes.length > itemsPerPage && (
-          <div className="flex-between mt-4" style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-            >
-              <ChevronLeft size={16} /> Önceki
-            </button>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              Sayfa <b>{currentPage}</b> / {totalPages} (Toplam {filteredIncomes.length} Kayıt)
-            </span>
-            <button
-              className="btn btn-secondary btn-sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              style={{ opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-            >
-              Sonraki <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
