@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X, ChevronLeft, ChevronRight, Smartphone, QrCode, Radio, Check, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIncome, onDeleteIncome, onAddService }) {
   const [plate, setPlate] = useState('');
@@ -22,12 +22,6 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const [newSrvName, setNewSrvName] = useState('');
   const [newSrvType, setNewSrvType] = useState('Binek');
   const [newSrvPrice, setNewSrvPrice] = useState('');
-
-  // NFC & QR Payment Modals State
-  const [showNFCModal, setShowNFCModal] = useState(false);
-  const [nfcStatus, setNfcStatus] = useState('waiting'); // 'waiting', 'processing', 'success'
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [qrStatus, setQrStatus] = useState('waiting'); // 'waiting', 'success'
 
   const handleQuickAddService = async (e) => {
     e.preventDefault();
@@ -111,43 +105,6 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
 
   const totalPages = Math.ceil(filteredIncomes.length / itemsPerPage) || 1;
   const paginatedIncomes = filteredIncomes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // NFC Payment Trigger
-  const handleStartNFCPayment = () => {
-    if (!amount || Number(amount) <= 0) {
-      alert('Lütfen önce hizmet tutarını giriniz.');
-      return;
-    }
-    setPaymentType('Kredi Kartı');
-    setNfcStatus('waiting');
-    setShowNFCModal(true);
-
-    if (/Android|iPhone/i.test(navigator.userAgent)) {
-      try {
-        window.location.href = `paytrpos://pay?amount=${amount}&plate=${encodeURIComponent(plate || 'OTO')}`;
-      } catch (e) {
-        console.log('SoftPOS launch fallback');
-      }
-    }
-  };
-
-  const handleSimulateNFCTap = () => {
-    setNfcStatus('processing');
-    setTimeout(() => {
-      setNfcStatus('success');
-    }, 1200);
-  };
-
-  // QR Payment Trigger
-  const handleStartQRPayment = () => {
-    if (!amount || Number(amount) <= 0) {
-      alert('Lütfen önce hizmet tutarını giriniz.');
-      return;
-    }
-    setPaymentType('Kredi Kartı');
-    setQrStatus('waiting');
-    setShowQRModal(true);
-  };
 
   return (
     <div className="form-grid-responsive">
@@ -296,180 +253,36 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
               />
             </div>
           </div>
-      {/* NFC Payment Modal */}
-      {showNFCModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card" style={{ maxWidth: '420px', width: '100%', textCenter: 'center', textAlign: 'center', border: '1px solid var(--accent-cyan)' }}>
-            <div className="flex-between mb-4">
-              <span className="status-badge supabase" style={{ fontSize: '0.8rem' }}>
-                <Smartphone size={14} /> SoftPOS NFC Aktif
-              </span>
-              <button className="btn btn-secondary btn-sm" onClick={() => setShowNFCModal(false)}>
-                <X size={16} />
-              </button>
+
+          {/* Ödeme Türü & Personel */}
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Ödeme Yöntemi</label>
+              <select
+                className="form-control"
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value)}
+              >
+                <option value="Nakit">Nakit</option>
+                <option value="Kredi Kartı">Kredi Kartı</option>
+                <option value="IBAN">IBAN / Havale</option>
+              </select>
             </div>
 
-            {nfcStatus === 'waiting' && (
-              <div>
-                <div style={{ width: '80px', height: '80px', margin: '0 auto 16px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--accent-cyan)', animation: 'pulse 1.5s infinite' }}>
-                  <Radio size={40} className="text-cyan" />
-                </div>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Kartınızı Telefonun Arkasına Dokundurun</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '16px' }}>
-                  {plate ? <b>{plate}</b> : 'Araç'} - Tutar: <b className="text-cyan">₺{amount}</b>
-                </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                  NFC özelliği aktif cep telefonunuzun arkasına temassız kartı yaklaştırın...
-                </p>
-                <button className="btn btn-emerald btn-full" onClick={handleSimulateNFCTap}>
-                  <Radio size={18} /> Kart Dokunduruldu (Test Onayı)
-                </button>
-              </div>
-            )}
-
-            {nfcStatus === 'processing' && (
-              <div style={{ padding: '20px 0' }}>
-                <Loader2 size={48} className="text-cyan" style={{ margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
-                <h3>Ödeme Alınıyor...</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Bankanızla güvenli iletişim kuruluyor</p>
-              </div>
-            )}
-
-            {nfcStatus === 'success' && (
-              <div>
-                <div style={{ width: '70px', height: '70px', margin: '0 auto 16px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-emerald)' }}>
-                  <Check size={40} />
-                </div>
-                <h3 className="text-emerald" style={{ fontSize: '1.3rem', marginBottom: '8px' }}>Ödeme Başarılı!</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                  ₺{amount} tutarındaki temassız kart ödemesi onaylandı.
-                </p>
-                <button
-                  className="btn btn-primary btn-full"
-                  onClick={() => {
-                    setShowNFCModal(false);
-                  }}
-                >
-                  Tamam (Kaydı Bitir)
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* QR Payment Modal */}
-      {showQRModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card" style={{ maxWidth: '420px', width: '100%', textAlign: 'center', border: '1px solid var(--accent-blue)' }}>
-            <div className="flex-between mb-4">
-              <span className="status-badge" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', fontSize: '0.8rem' }}>
-                <QrCode size={14} /> Dinamik Ödeme QR Kodu
-              </span>
-              <button className="btn btn-secondary btn-sm" onClick={() => setShowQRModal(false)}>
-                <X size={16} />
-              </button>
+            <div className="form-group">
+              <label className="form-label">Yıkayan Personel</label>
+              <select
+                className="form-control"
+                value={staffName}
+                onChange={(e) => setStaffName(e.target.value)}
+              >
+                <option value="">-- Personel Seçin (Opsiyonel) --</option>
+                {staffList.map(st => (
+                  <option key={st.id} value={st.name}>{st.name}</option>
+                ))}
+              </select>
             </div>
-
-            {qrStatus === 'waiting' && (
-              <div>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '6px' }}>Müşteriye QR Kodu Okutun</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>
-                  Plaka: <b>{plate || 'Oto Yıkama'}</b> | Tutar: <b className="text-emerald">₺{amount}</b>
-                </p>
-
-                {/* Dynamic QR Code Image */}
-                <div style={{ background: '#fff', padding: '16px', borderRadius: '16px', display: 'inline-block', marginBottom: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`AYGUN_OTO_YIKAMA:${plate}:${amount}:TRY`)}`}
-                    alt="Ödeme QR Kodu"
-                    style={{ width: '180px', height: '180px', display: 'block' }}
-                  />
-                </div>
-
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Müşteri cep telefonu kamerasıyla okutarak ödemeyi tamamlar.
-                </p>
-
-                <button
-                  className="btn btn-emerald btn-full"
-                  onClick={() => setQrStatus('success')}
-                >
-                  <CheckCircle2 size={18} /> Ödeme Tamamlandı (Onayla)
-                </button>
-              </div>
-            )}
-
-            {qrStatus === 'success' && (
-              <div>
-                <div style={{ width: '70px', height: '70px', margin: '0 auto 16px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-emerald)' }}>
-                  <Check size={40} />
-                </div>
-                <h3 className="text-emerald" style={{ fontSize: '1.3rem', marginBottom: '8px' }}>QR Ödeme Alındı!</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                  ₺{amount} tutarındaki dijital ödeme onaylandı.
-                </p>
-                <button className="btn btn-primary btn-full" onClick={() => setShowQRModal(false)}>
-                  Tamam
-                </button>
-              </div>
-            )}
           </div>
-        </div>
-      )}
-
-      {/* Ödeme Yöntemi & Hızlı Mobil Ödeme Butonları */}
-      <div className="form-grid">
-        <div className="form-group">
-          <label className="form-label flex-between">
-            <span>Ödeme Yöntemi</span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>Mobil POS Aktif</span>
-          </label>
-          <select
-            className="form-control"
-            value={paymentType}
-            onChange={(e) => setPaymentType(e.target.value)}
-          >
-            <option value="Nakit">Nakit</option>
-            <option value="Kredi Kartı">Kredi Kartı</option>
-            <option value="IBAN">IBAN / Havale</option>
-          </select>
-
-          {/* Quick Mobile Payment Buttons */}
-          <div className="flex-center gap-2 mt-2">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ flex: 1, fontSize: '0.75rem', background: 'rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.3)', color: 'var(--accent-cyan)' }}
-              onClick={handleStartNFCPayment}
-            >
-              <Smartphone size={14} /> NFC Kart Dokundur
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ flex: 1, fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.3)', color: 'var(--accent-blue)' }}
-              onClick={handleStartQRPayment}
-            >
-              <QrCode size={14} /> QR Kod Oluştur
-            </button>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Yıkayan Personel</label>
-          <select
-            className="form-control"
-            value={staffName}
-            onChange={(e) => setStaffName(e.target.value)}
-          >
-            <option value="">-- Personel Seçin (Opsiyonel) --</option>
-            {staffList.map(st => (
-              <option key={st.id} value={st.name}>{st.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
 
           {/* Tarih & Not */}
           <div className="form-grid">
