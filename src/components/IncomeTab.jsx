@@ -316,45 +316,6 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
               </button>
             </div>
 
-            {/* Quick Service Add Mini Form */}
-            {showQuickServiceModal && (
-              <div style={{ background: 'rgba(6, 182, 212, 0.1)', border: '1px solid var(--accent-cyan)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
-                <div className="flex-between mb-2">
-                  <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>Yeni Hizmet Çipi Oluştur</span>
-                  <button type="button" onClick={() => setShowQuickServiceModal(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="form-grid" style={{ marginBottom: '8px' }}>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Hizmet Adı (Örn: Koltuk Yıkama)"
-                    value={newSrvName}
-                    onChange={(e) => setNewSrvName(e.target.value)}
-                  />
-                  <select className="form-control" value={newSrvType} onChange={(e) => setNewSrvType(e.target.value)}>
-                    <option value="Binek">Binek</option>
-                    <option value="SUV / Arazi">SUV / Arazi</option>
-                    <option value="Ticari / Minibüs">Ticari</option>
-                    <option value="Motosiklet">Motosiklet</option>
-                  </select>
-                </div>
-                <div className="flex-between gap-2">
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Fiyat ₺ (Örn: 250)"
-                    value={newSrvPrice}
-                    onChange={(e) => setNewSrvPrice(e.target.value)}
-                  />
-                  <button type="button" className="btn btn-emerald btn-sm" onClick={handleQuickAddService} style={{ whiteSpace: 'nowrap' }}>
-                    Kaydet & Seç
-                  </button>
-                </div>
-              </div>
-            )}
-
             {filteredServices.length === 0 ? (
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Bu araç sınıfı için kayıtlı hizmet çipi bulunamadı.</p>
             ) : (
