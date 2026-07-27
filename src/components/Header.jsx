@@ -61,18 +61,6 @@ export function Header({ activeTab, setActiveTab, onOpenSettings }) {
         </button>
       </nav>
 
-      {/* Connection Indicator */}
-      <div className="flex-center gap-2">
-        <button
-          onClick={onOpenSettings}
-          className={`status-badge ${isSupabaseConfigured ? 'supabase' : 'local'}`}
-          title={isSupabaseConfigured ? 'Supabase Canlı Veritabanı Bağlı' : 'Yerel Veri Modu (Supabase Anahtarınız Yok)'}
-          style={{ cursor: 'pointer', border: 'none' }}
-        >
-          <Database size={14} />
-          {isSupabaseConfigured ? 'Supabase Canlı' : 'Yerel / Demo Modu'}
-        </button>
-      </div>
     </header>
   );
 }
