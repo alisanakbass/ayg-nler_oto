@@ -1,19 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { MinusCircle, CheckCircle2 } from 'lucide-react';
-
-const EXPENSE_CATEGORIES = [
-  'Kira',
-  'Fatura (Elektrik/Su/Doğalgaz)',
-  'Malzeme & Kimyasal',
-  'Personel & Maaş',
-  'Yemek & İkram',
-  'Ekipman & Bakım/Tamir',
-  'Diğer'
-];
 
 export function ExpenseTab({ onAddExpense }) {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Malzeme & Kimyasal');
+  const [category] = useState('Gider');
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState('Nakit');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -22,7 +12,6 @@ export function ExpenseTab({ onAddExpense }) {
 
   // Input Refs for Sequential ENTER Navigation
   const titleInputRef = useRef(null);
-  const categorySelectRef = useRef(null);
   const amountInputRef = useRef(null);
   const paymentSelectRef = useRef(null);
   const dateInputRef = useRef(null);
@@ -30,13 +19,6 @@ export function ExpenseTab({ onAddExpense }) {
 
   // Sequential ENTER Key Handlers
   const handleTitleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      categorySelectRef.current?.focus();
-    }
-  };
-
-  const handleCategoryKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       amountInputRef.current?.focus();
@@ -86,7 +68,7 @@ export function ExpenseTab({ onAddExpense }) {
 
     const newExpense = {
       title: title.trim(),
-      category,
+      category: 'Gider',
       amount: Number(amount),
       payment_type: paymentType,
       date,
@@ -125,39 +107,24 @@ export function ExpenseTab({ onAddExpense }) {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">1. Gider Başlığı / Açıklama * (ENTER ↵)</label>
-            <input
-              ref={titleInputRef}
-              type="text"
-              className="form-control"
-              placeholder="Örn: 20L Şampuan Alımı, Dükkan Kirası, Elektrik Faturası"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleTitleKeyDown}
-              autoFocus
-              required
-            />
-          </div>
-
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">2. Gider Kategorisi (ENTER ↵)</label>
-              <select
-                ref={categorySelectRef}
+              <label className="form-label">1. Gider Başlığı / Açıklama * (ENTER ↵)</label>
+              <input
+                ref={titleInputRef}
+                type="text"
                 className="form-control"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                onKeyDown={handleCategoryKeyDown}
-              >
-                {EXPENSE_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                placeholder="Örn: Şampuan Alımı, Dükkan Kirası, Elektrik..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                autoFocus
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label className="form-label">3. Tutar (TL) * (ENTER ↵)</label>
+              <label className="form-label">2. Tutar (TL) * (ENTER ↵)</label>
               <input
                 ref={amountInputRef}
                 type="number"
@@ -174,7 +141,7 @@ export function ExpenseTab({ onAddExpense }) {
 
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">4. Ödeme Yöntemi (ENTER ↵)</label>
+              <label className="form-label">3. Ödeme Yöntemi (ENTER ↵)</label>
               <select
                 ref={paymentSelectRef}
                 className="form-control"
@@ -189,7 +156,7 @@ export function ExpenseTab({ onAddExpense }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">5. İşlem Tarihi (ENTER ↵)</label>
+              <label className="form-label">4. İşlem Tarihi (ENTER ↵)</label>
               <input
                 ref={dateInputRef}
                 type="date"
@@ -202,7 +169,7 @@ export function ExpenseTab({ onAddExpense }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">6. Ek Not / Fiş No (ENTER ↵ ile KAYDET)</label>
+            <label className="form-label">5. Ek Not / Fiş No (ENTER ↵ ile KAYDET)</label>
             <input
               ref={noteInputRef}
               type="text"
