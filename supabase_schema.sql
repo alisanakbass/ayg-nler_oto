@@ -78,6 +78,11 @@ ALTER TABLE public.incomes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.services;
+DROP POLICY IF EXISTS "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.incomes;
+DROP POLICY IF EXISTS "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.expenses;
+DROP POLICY IF EXISTS "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.staff;
+
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.services FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.incomes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Herkes Okuyabilir ve Yazabilir (Public Access)" ON public.expenses FOR ALL USING (true) WITH CHECK (true);
