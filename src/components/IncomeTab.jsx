@@ -259,14 +259,6 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
                 <span>3. Hızlı Hizmet Seçimi</span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>(Çoklu Seçilebilir)</span>
               </label>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => setShowQuickServiceModal(!showQuickServiceModal)}
-                style={{ fontSize: '0.75rem', padding: '4px 8px', color: 'var(--accent-cyan)' }}
-              >
-                <Plus size={14} /> + Yeni Hizmet Ekle
-              </button>
             </div>
 
             {/* Araç Tipi Sınıflandırma Butonları / Sekmeleri */}
