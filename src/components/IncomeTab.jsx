@@ -118,13 +118,6 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const handlePaymentKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      staffSelectRef.current?.focus();
-    }
-  };
-
-  const handleStaffKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
       dateInputRef.current?.focus();
     }
   };
@@ -364,7 +357,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* 6. Ödeme Türü & 7. Personel */}
+          {/* 6. Ödeme Türü & 7. Tarih & 8. Not */}
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">6. Ödeme Yöntemi (ENTER ↵)</label>
@@ -382,26 +375,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
 
             <div className="form-group">
-              <label className="form-label">7. Yıkayan Personel (ENTER ↵)</label>
-              <select
-                ref={staffSelectRef}
-                className="form-control"
-                value={staffName}
-                onChange={(e) => setStaffName(e.target.value)}
-                onKeyDown={handleStaffKeyDown}
-              >
-                <option value="">-- Personel Seçin (Opsiyonel) --</option>
-                {staffList.map(st => (
-                  <option key={st.id} value={st.name}>{st.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* 8. Tarih & 9. Not */}
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">8. İşlem Tarihi (ENTER ↵)</label>
+              <label className="form-label">7. İşlem Tarihi (ENTER ↵)</label>
               <input
                 ref={dateInputRef}
                 type="date"
@@ -411,19 +385,19 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
                 onKeyDown={handleDateKeyDown}
               />
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className="form-label">9. Not / Açıklama (ENTER ↵ ile KAYDET)</label>
-              <input
-                ref={noteInputRef}
-                type="text"
-                className="form-control"
-                placeholder="Ekstra istekler..."
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onKeyDown={handleNoteKeyDown}
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">8. Not / Açıklama (ENTER ↵ ile KAYDET)</label>
+            <input
+              ref={noteInputRef}
+              type="text"
+              className="form-control"
+              placeholder="Ekstra istekler..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onKeyDown={handleNoteKeyDown}
+            />
           </div>
 
           <button type="submit" className="btn btn-emerald btn-full mt-4">

@@ -112,7 +112,6 @@ export default function App() {
           {activeTab === 'incomes' && (
             <IncomeTab
               services={services}
-              staffList={staffList}
               incomes={incomes}
               onAddIncome={handleAddIncome}
               onDeleteIncome={handleDeleteIncome}
@@ -143,22 +142,16 @@ export default function App() {
             {activeTab === 'services_staff' && (
               <ServicesStaffTab
                 services={services}
-                staffList={staffList}
                 onAddService={handleAddService}
                 onDeleteService={handleDeleteService}
-                onAddStaff={handleAddStaff}
-                onDeleteStaff={handleDeleteStaff}
               />
             )}
 
             {activeTab === 'settings' && (
               <ServicesStaffTab
                 services={services}
-                staffList={staffList}
                 onAddService={handleAddService}
                 onDeleteService={handleDeleteService}
-                onAddStaff={handleAddStaff}
-                onDeleteStaff={handleDeleteStaff}
               />
             )}
           </Suspense>
