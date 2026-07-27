@@ -52,14 +52,19 @@ CREATE TABLE IF NOT EXISTS public.staff (
 -- ========================================================
 
 INSERT INTO public.services (name, vehicle_type, price) VALUES
-('İç - Dış Yıkama', 'Binek', 300),
-('İç - Dış Yıkama', 'SUV / Arazi', 400),
-('İç - Dış Yıkama', 'Ticari / Minibüs', 500),
-('Detaylı İç Temizlik', 'Binek', 2500),
-('Pasta Cila & Boya Koruma', 'Binek', 4000),
-('Seramik Kaplama', 'Binek', 8000),
-('Motor Yıkama & Bakım', 'Binek', 600),
-('Koltuk Yıkama & Leke Çıkarma', 'Binek', 1500)
+('İç Dış Yıkama', 'Binek', 1100),
+('İç veya Dış Yıkama', 'Binek', 800),
+('Su Tutma', 'Binek', 750),
+('Cilalı Yıkama', 'Binek', 1850),
+('İç Dış Yıkama', 'SUV / Arazi', 1250),
+('İç veya Dış Yıkama', 'SUV / Arazi', 900),
+('Su Tutma', 'SUV / Arazi', 800),
+('Cilalı Yıkama', 'SUV / Arazi', 2000),
+('İç Dış Yıkama', 'Ticari / Minibüs', 2000),
+('İç veya Dış Yıkama', 'Ticari / Minibüs', 1500),
+('Su Tutma', 'Ticari / Minibüs', 1000),
+('Cilalı Yıkama', 'Ticari / Minibüs', 2700),
+('Motosiklet Yıkama', 'Motosiklet', 800)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.staff (name, phone, commission_rate) VALUES

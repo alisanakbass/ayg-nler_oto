@@ -2,14 +2,26 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // LocalStorage varsayılan veriler (Supabase henüz baglanmadiysa kullanılacak)
 const INITIAL_SERVICES = [
-  { id: '1', name: 'İç - Dış Yıkama', vehicle_type: 'Binek', price: 300 },
-  { id: '2', name: 'İç - Dış Yıkama', vehicle_type: 'SUV / Arazi', price: 400 },
-  { id: '3', name: 'İç - Dış Yıkama', vehicle_type: 'Ticari / Minibüs', price: 500 },
-  { id: '4', name: 'Detaylı İç Temizlik', vehicle_type: 'Binek', price: 2500 },
-  { id: '5', name: 'Pasta Cila & Boya Koruma', vehicle_type: 'Binek', price: 4000 },
-  { id: '6', name: 'Seramik Kaplama', vehicle_type: 'Binek', price: 8000 },
-  { id: '7', name: 'Motor Yıkama & Bakım', vehicle_type: 'Binek', price: 600 },
-  { id: '8', name: 'Koltuk Yıkama & Leke Çıkarma', vehicle_type: 'Binek', price: 1500 }
+  // Binek Araç
+  { id: '1', name: 'İç Dış Yıkama', vehicle_type: 'Binek', price: 1100 },
+  { id: '2', name: 'İç veya Dış Yıkama', vehicle_type: 'Binek', price: 800 },
+  { id: '3', name: 'Su Tutma', vehicle_type: 'Binek', price: 750 },
+  { id: '4', name: 'Cilalı Yıkama', vehicle_type: 'Binek', price: 1850 },
+
+  // Jeep / SUV
+  { id: '5', name: 'İç Dış Yıkama', vehicle_type: 'SUV / Arazi', price: 1250 },
+  { id: '6', name: 'İç veya Dış Yıkama', vehicle_type: 'SUV / Arazi', price: 900 },
+  { id: '7', name: 'Su Tutma', vehicle_type: 'SUV / Arazi', price: 800 },
+  { id: '8', name: 'Cilalı Yıkama', vehicle_type: 'SUV / Arazi', price: 2000 },
+
+  // Minibüs / Panelvan / Vito (Ticari)
+  { id: '9', name: 'İç Dış Yıkama', vehicle_type: 'Ticari / Minibüs', price: 2000 },
+  { id: '10', name: 'İç veya Dış Yıkama', vehicle_type: 'Ticari / Minibüs', price: 1500 },
+  { id: '11', name: 'Su Tutma', vehicle_type: 'Ticari / Minibüs', price: 1000 },
+  { id: '12', name: 'Cilalı Yıkama', vehicle_type: 'Ticari / Minibüs', price: 2700 },
+
+  // Motosiklet
+  { id: '13', name: 'Motosiklet Yıkama', vehicle_type: 'Motosiklet', price: 800 }
 ];
 
 const INITIAL_STAFF = [
