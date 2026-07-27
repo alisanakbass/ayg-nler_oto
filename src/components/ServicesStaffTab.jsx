@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Tag, Plus, Trash2 } from 'lucide-react';
+import { Tag, Plus, Trash2, Edit3, Check, X } from 'lucide-react';
 
-export function ServicesStaffTab({ services = [], onAddService, onDeleteService }) {
+export function ServicesStaffTab({ services = [], onAddService, onDeleteService, onUpdateService }) {
   // Service Form State & Refs
   const [srvName, setSrvName] = useState('');
   const [srvType, setSrvType] = useState('Binek');
@@ -10,6 +10,12 @@ export function ServicesStaffTab({ services = [], onAddService, onDeleteService 
   const srvNameRef = useRef(null);
   const srvTypeRef = useRef(null);
   const srvPriceRef = useRef(null);
+
+  // Inline Editing State
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editType, setEditType] = useState('Binek');
+  const [editPrice, setEditPrice] = useState('');
 
   const [msg, setMsg] = useState('');
 
@@ -50,14 +56,42 @@ export function ServicesStaffTab({ services = [], onAddService, onDeleteService 
     setTimeout(() => srvNameRef.current?.focus(), 100);
   };
 
+  const startEditing = (srv) => {
+    setEditingId(srv.id);
+    setEditName(srv.name);
+    setEditType(srv.vehicle_type || 'Binek');
+    setEditPrice(srv.price.toString());
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+
+  const saveEditing = async (id) => {
+    if (!editName.trim() || !editPrice || Number(editPrice) <= 0) {
+      alert('Lütfen geçerli bir hizmet tanımı ve fiyat giriniz.');
+      return;
+    }
+    if (onUpdateService) {
+      await onUpdateService(id, {
+        name: editName.trim(),
+        vehicle_type: editType,
+        price: Number(editPrice)
+      });
+    }
+    setEditingId(null);
+    setMsg('Hizmet fiyatı başarıyla güncellendi!');
+    setTimeout(() => setMsg(''), 3000);
+  };
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '820px', margin: '0 auto' }}>
       {/* Hizmet & Fiyat Yönetimi */}
       <div className="glass-card">
         <div className="flex-between mb-4">
           <h2 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Tag size={20} className="text-cyan" />
-            Hizmet & Fiyat Yönetim Listesi
+            Hizmet & Fiyat Listesi Düzenleme
           </h2>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             Toplam: {services.length} Hizmet
@@ -65,7 +99,7 @@ export function ServicesStaffTab({ services = [], onAddService, onDeleteService 
         </div>
 
         {msg && (
-          <div style={{ color: 'var(--accent-emerald)', padding: '8px', background: 'rgba(16,185,129,0.1)', borderRadius: '8px', marginBottom: '12px' }}>
+          <div style={{ color: 'var(--accent-emerald)', padding: '10px', background: 'rgba(16,185,129,0.15)', border: '1px solid var(--accent-emerald)', borderRadius: '8px', marginBottom: '16px', fontSize: '0.875rem' }}>
             {msg}
           </div>
         )}
@@ -98,7 +132,7 @@ export function ServicesStaffTab({ services = [], onAddService, onDeleteService 
               >
                 <option value="Binek">Binek</option>
                 <option value="SUV / Arazi">SUV / Arazi</option>
-                <option value="Ticari / Minibüs">Ticari</option>
+                <option value="Ticari / Minibüs">Ticari / Minibüs</option>
                 <option value="Motosiklet">Motosiklet</option>
               </select>
             </div>
@@ -123,29 +157,114 @@ export function ServicesStaffTab({ services = [], onAddService, onDeleteService 
           </button>
         </form>
 
-        <div className="table-responsive" style={{ maxHeight: '450px', overflowY: 'auto' }}>
+        <div className="table-responsive" style={{ maxHeight: '480px', overflowY: 'auto' }}>
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Hizmet</th>
+                <th>Hizmet Tanımı</th>
                 <th>Araç Tipi</th>
-                <th>Fiyat</th>
-                <th>Sil</th>
+                <th>Fiyat (TL)</th>
+                <th style={{ width: '120px' }}>İşlemler</th>
               </tr>
             </thead>
             <tbody>
-              {services.map(s => (
-                <tr key={s.id}>
-                  <td><b>{s.name}</b></td>
-                  <td>{s.vehicle_type}</td>
-                  <td className="text-cyan" style={{ fontWeight: 700 }}>₺{s.price}</td>
-                  <td>
-                    <button className="btn btn-danger btn-sm" onClick={() => onDeleteService(s.id)}>
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {services.map(s => {
+                const isEditing = editingId === s.id;
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="form-control"
+                          style={{ padding: '4px 8px', fontSize: '0.85rem' }}
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                        />
+                      ) : (
+                        <b>{s.name}</b>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <select
+                          className="form-control"
+                          style={{ padding: '4px 8px', fontSize: '0.85rem' }}
+                          value={editType}
+                          onChange={(e) => setEditType(e.target.value)}
+                        >
+                          <option value="Binek">Binek</option>
+                          <option value="SUV / Arazi">SUV / Arazi</option>
+                          <option value="Ticari / Minibüs">Ticari / Minibüs</option>
+                          <option value="Motosiklet">Motosiklet</option>
+                        </select>
+                      ) : (
+                        s.vehicle_type
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          className="form-control"
+                          style={{ padding: '4px 8px', fontSize: '0.85rem', maxWidth: '100px' }}
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                        />
+                      ) : (
+                        <span className="text-cyan" style={{ fontWeight: 800, fontSize: '0.95rem' }}>
+                          ₺{Number(s.price).toLocaleString('tr-TR')}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <div className="flex-center gap-1">
+                          <button
+                            className="btn btn-emerald btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            onClick={() => saveEditing(s.id)}
+                            title="Kaydet"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            onClick={cancelEditing}
+                            title="İptal"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex-center gap-1">
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px', color: 'var(--accent-cyan)' }}
+                            onClick={() => startEditing(s)}
+                            title="Fiyat Düzenle"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            onClick={() => {
+                              if (confirm(`${s.name} (${s.vehicle_type}) hizmetini silmek istediğinize emin misiniz?`)) {
+                                onDeleteService(s.id);
+                              }
+                            }}
+                            title="Sil"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

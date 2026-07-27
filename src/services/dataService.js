@@ -92,6 +92,18 @@ export const dataService = {
     return true;
   },
 
+  async updateService(id, updatedFields) {
+    serviceCache = null; // Invalidate cache
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.from('services').update(updatedFields).eq('id', id).select();
+      if (!error && data) return data[0];
+    }
+    const current = getLocal('aygun_services', INITIAL_SERVICES);
+    const updated = current.map(item => item.id === id ? { ...item, ...updatedFields } : item);
+    setLocal('aygun_services', updated);
+    return { id, ...updatedFields };
+  },
+
   // Gelirler (Incomes / Sales)
   async getIncomes() {
     if (isSupabaseConfigured) {

@@ -74,6 +74,11 @@ export default function App() {
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
+  const handleUpdateService = async (id, updatedFields) => {
+    const updated = await dataService.updateService(id, updatedFields);
+    setServices(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
+  };
+
   const handleAddStaff = async (newStaff) => {
     const created = await dataService.addStaff(newStaff);
     setStaffList(prev => [...prev, created]);
@@ -154,6 +159,7 @@ export default function App() {
                 services={services}
                 onAddService={handleAddService}
                 onDeleteService={handleDeleteService}
+                onUpdateService={handleUpdateService}
               />
             )}
 
@@ -162,6 +168,7 @@ export default function App() {
                 services={services}
                 onAddService={handleAddService}
                 onDeleteService={handleDeleteService}
+                onUpdateService={handleUpdateService}
               />
             )}
           </Suspense>
