@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircle, Search, Trash2, CheckCircle2, Car, Sparkles, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIncome, onDeleteIncome, onAddService }) {
@@ -13,6 +13,14 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const [searchTerm, setSearchTerm] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Multi-Select Services State
+  const [selectedServiceIds, setSelectedServiceIds] = useState([]);
+
+  // Input Refs for ENTER navigation
+  const plateInputRef = useRef(null);
+  const amountInputRef = useRef(null);
+  const paymentSelectRef = useRef(null);
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -26,27 +34,44 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
   const handleQuickAddService = async (e) => {
     e.preventDefault();
     if (!newSrvName.trim() || !newSrvPrice || Number(newSrvPrice) <= 0) return;
+    let createdItem = null;
     if (onAddService) {
-      await onAddService({
+      createdItem = await onAddService({
         name: newSrvName.trim(),
         vehicle_type: newSrvType,
         price: Number(newSrvPrice)
       });
     }
-    setServiceName(newSrvName.trim());
-    setVehicleType(newSrvType);
-    setAmount(newSrvPrice.toString());
+    if (createdItem) {
+      handleToggleService(createdItem);
+    }
     setNewSrvName('');
     setNewSrvPrice('');
     setShowQuickServiceModal(false);
   };
 
-  // Handle service chip selection
-  const handleSelectService = (service) => {
-    setServiceName(service.name);
-    setAmount(service.price.toString());
-    if (service.vehicle_type) {
-      setVehicleType(service.vehicle_type);
+  // Multi-select service chip toggle
+  const handleToggleService = (service) => {
+    let nextIds;
+    if (selectedServiceIds.includes(service.id)) {
+      nextIds = selectedServiceIds.filter(id => id !== service.id);
+    } else {
+      nextIds = [...selectedServiceIds, service.id];
+    }
+    setSelectedServiceIds(nextIds);
+
+    const selectedObjs = services.filter(s => nextIds.includes(s.id));
+    if (selectedObjs.length > 0) {
+      const names = selectedObjs.map(s => s.name).join(' + ');
+      const total = selectedObjs.reduce((acc, curr) => acc + Number(curr.price || 0), 0);
+      setServiceName(names);
+      setAmount(total.toString());
+      if (service.vehicle_type) {
+        setVehicleType(service.vehicle_type);
+      }
+    } else {
+      setServiceName('');
+      setAmount('');
     }
   };
 
@@ -56,10 +81,33 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     setPlate(val);
   };
 
+  // ENTER Key Navigation Handlers
+  const handlePlateKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      amountInputRef.current?.focus();
+    }
+  };
+
+  const handleAmountKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      paymentSelectRef.current?.focus();
+    }
+  };
+
+  const handlePaymentKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!plate.trim()) {
       alert('Lütfen araç plakasını giriniz.');
+      plateInputRef.current?.focus();
       return;
     }
     if (!serviceName.trim()) {
@@ -68,6 +116,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
     }
     if (!amount || Number(amount) <= 0) {
       alert('Lütfen geçerli bir tutar giriniz.');
+      amountInputRef.current?.focus();
       return;
     }
 
@@ -84,13 +133,19 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
 
     await onAddIncome(newIncome);
 
-    // Reset Form
+    // Reset Form & Multi Select Chips
     setPlate('');
     setServiceName('');
     setAmount('');
     setNote('');
+    setSelectedServiceIds([]);
     setSuccessMessage(`${plate.trim()} plakalı araç yıkama kaydı başarıyla eklendi!`);
     setTimeout(() => setSuccessMessage(''), 4000);
+
+    // Re-focus back to Plate input for ultra-fast next entry
+    setTimeout(() => {
+      plateInputRef.current?.focus();
+    }, 100);
   };
 
   const filteredIncomes = incomes.filter(inc => 
@@ -133,13 +188,16 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
           {/* Plaka & Araç Tipi */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Araç Plakası *</label>
+              <label className="form-label">Araç Plakası (ENTER ↵ ile İlerle)</label>
               <input
+                ref={plateInputRef}
                 type="text"
                 className="form-control"
                 placeholder="Örn: 34 ABC 123"
                 value={plate}
                 onChange={handlePlateChange}
+                onKeyDown={handlePlateKeyDown}
+                autoFocus
                 required
               />
             </div>
@@ -159,17 +217,19 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
           </div>
 
-          {/* Hizmet Seçim Hızlı Chip'leri */}
+          {/* Hizmet Seçim Hızlı Chip'leri (Çoklu Seçim Özellikli) */}
           <div className="form-group">
             <div className="flex-between mb-2">
-              <label className="form-label" style={{ marginBottom: 0 }}>Hızlı Hizmet Seçimi</label>
+              <label className="form-label" style={{ marginBottom: 0 }}>
+                Hızlı Hizmet Seçimi <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>(Birden fazla seçilebilir)</span>
+              </label>
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
                 onClick={() => setShowQuickServiceModal(!showQuickServiceModal)}
                 style={{ fontSize: '0.75rem', padding: '4px 8px', color: 'var(--accent-cyan)' }}
               >
-                <Plus size={14} /> + Yeni Hizmet Çipi Ekle
+                <Plus size={14} /> + Yeni Hizmet Ekle
               </button>
             </div>
 
@@ -212,24 +272,27 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             )}
 
             <div className="chip-grid">
-              {services.map((srv) => (
-                <div
-                  key={srv.id}
-                  className={`chip-item ${serviceName === srv.name && vehicleType === srv.vehicle_type ? 'selected' : ''}`}
-                  onClick={() => handleSelectService(srv)}
-                >
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{srv.vehicle_type || 'Binek'}</span>
-                  <span>{srv.name}</span>
-                  <span className="chip-price">₺{srv.price}</span>
-                </div>
-              ))}
+              {services.map((srv) => {
+                const isSelected = selectedServiceIds.includes(srv.id);
+                return (
+                  <div
+                    key={srv.id}
+                    className={`chip-item ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleToggleService(srv)}
+                  >
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{srv.vehicle_type || 'Binek'}</span>
+                    <span>{srv.name}</span>
+                    <span className="chip-price">₺{srv.price}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Hizmet Adı & Tutar Manuel Input */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Hizmet Adı *</label>
+              <label className="form-label">Seçili Hizmet(ler) *</label>
               <input
                 type="text"
                 className="form-control"
@@ -241,14 +304,16 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
             </div>
 
             <div className="form-group">
-              <label className="form-label">Tutar (TL) *</label>
+              <label className="form-label">Toplam Tutar (TL) * (ENTER ↵ ile İlerle)</label>
               <input
+                ref={amountInputRef}
                 type="number"
                 step="0.01"
                 className="form-control"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleAmountKeyDown}
                 required
               />
             </div>
@@ -257,11 +322,13 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
           {/* Ödeme Türü & Personel */}
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Ödeme Yöntemi</label>
+              <label className="form-label">Ödeme Yöntemi (ENTER ↵ ile Kaydet)</label>
               <select
+                ref={paymentSelectRef}
                 className="form-control"
                 value={paymentType}
                 onChange={(e) => setPaymentType(e.target.value)}
+                onKeyDown={handlePaymentKeyDown}
               >
                 <option value="Nakit">Nakit</option>
                 <option value="Kredi Kartı">Kredi Kartı</option>
@@ -310,7 +377,7 @@ export function IncomeTab({ services = [], staffList = [], incomes = [], onAddIn
 
           <button type="submit" className="btn btn-emerald btn-full mt-4">
             <Sparkles size={18} />
-            Yıkama Kaydını Kaydet
+            Yıkama Kaydını Kaydet (ENTER ↵)
           </button>
         </form>
       </div>
