@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PlusCircle, CheckCircle2, Sparkles, Plus, X, Car, Filter } from 'lucide-react';
+import { PlusCircle, CheckCircle2, Sparkles, Car } from 'lucide-react';
 
 const VEHICLE_CATEGORIES = ['Binek', 'SUV / Arazi', 'Ticari / Minibüs', 'Motosiklet'];
 
-export function IncomeTab({ services = [], onAddIncome, onAddService }) {
+export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddService }) {
   const [plate, setPlate] = useState('');
   const [vehicleType, setVehicleType] = useState('Binek');
-  const [activeChipCategory, setActiveChipCategory] = useState('Binek'); // 'Binek', 'SUV / Arazi', 'Ticari / Minibüs', 'Motosiklet', 'all'
+  const [activeChipCategory, setActiveChipCategory] = useState('Binek');
   const [serviceName, setServiceName] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState('Nakit');
+  const [staffName, setStaffName] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [successMessage, setSuccessMessage] = useState('');
@@ -30,33 +31,9 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
   const serviceNameInputRef = useRef(null);
   const amountInputRef = useRef(null);
   const paymentSelectRef = useRef(null);
+  const staffSelectRef = useRef(null);
   const dateInputRef = useRef(null);
   const noteInputRef = useRef(null);
-
-  // Quick Service Modal State
-  const [showQuickServiceModal, setShowQuickServiceModal] = useState(false);
-  const [newSrvName, setNewSrvName] = useState('');
-  const [newSrvType, setNewSrvType] = useState('Binek');
-  const [newSrvPrice, setNewSrvPrice] = useState('');
-
-  const handleQuickAddService = async (e) => {
-    e.preventDefault();
-    if (!newSrvName.trim() || !newSrvPrice || Number(newSrvPrice) <= 0) return;
-    let createdItem = null;
-    if (onAddService) {
-      createdItem = await onAddService({
-        name: newSrvName.trim(),
-        vehicle_type: newSrvType,
-        price: Number(newSrvPrice)
-      });
-    }
-    if (createdItem) {
-      handleToggleService(createdItem);
-    }
-    setNewSrvName('');
-    setNewSrvPrice('');
-    setShowQuickServiceModal(false);
-  };
 
   // Multi-select service chip toggle
   const handleToggleService = (service) => {
@@ -121,6 +98,13 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
   const handlePaymentKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      staffSelectRef.current?.focus();
+    }
+  };
+
+  const handleStaffKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
       dateInputRef.current?.focus();
     }
   };
@@ -163,6 +147,7 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
       service_name: serviceName,
       amount: Number(amount),
       payment_type: paymentType,
+      staff_name: staffName,
       note: note.trim(),
       date
     };
@@ -251,7 +236,7 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
             </div>
           </div>
 
-          {/* 3. Hizmet Seçim Hızlı Chip'leri (Sınıflandırılmış) */}
+          {/* 3. Hizmet Seçim Hızlı Chip'leri */}
           <div className="form-group mb-4" style={{ background: 'rgba(0,0,0,0.15)', padding: '16px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
             <div className="flex-between mb-3" style={{ flexWrap: 'wrap', gap: '8px' }}>
               <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -261,7 +246,7 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
               </label>
             </div>
 
-            {/* Araç Tipi Sınıflandırma Butonları / Sekmeleri */}
+            {/* Araç Tipi Sınıflandırma Butonları */}
             <div className="flex-center gap-2 mb-3" style={{ justifyContent: 'flex-start', overflowX: 'auto', paddingBottom: '4px' }}>
               {VEHICLE_CATEGORIES.map(cat => (
                 <button
@@ -362,7 +347,7 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
             </div>
           </div>
 
-          {/* 6. Ödeme Türü & 7. Tarih */}
+          {/* 6. Ödeme Türü & Yıkamayı Yapan Personel */}
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">6. Ödeme Yöntemi (ENTER ↵)</label>
@@ -380,7 +365,28 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">7. İşlem Tarihi (ENTER ↵)</label>
+              <label className="form-label">7. Yıkamayı Yapan Personel (ENTER ↵)</label>
+              <select
+                ref={staffSelectRef}
+                className="form-control"
+                value={staffName}
+                onChange={(e) => setStaffName(e.target.value)}
+                onKeyDown={handleStaffKeyDown}
+              >
+                <option value="">-- Personel Seçin (Opsiyonel) --</option>
+                {staffList.map(stf => (
+                  <option key={stf.id} value={stf.name}>
+                    {stf.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* 8. Tarih & 9. Not */}
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">8. İşlem Tarihi (ENTER ↵)</label>
               <input
                 ref={dateInputRef}
                 type="date"
@@ -390,19 +396,19 @@ export function IncomeTab({ services = [], onAddIncome, onAddService }) {
                 onKeyDown={handleDateKeyDown}
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">8. Not / Açıklama (ENTER ↵ ile KAYDET)</label>
-            <input
-              ref={noteInputRef}
-              type="text"
-              className="form-control"
-              placeholder="Ekstra istekler..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              onKeyDown={handleNoteKeyDown}
-            />
+            <div className="form-group">
+              <label className="form-label">9. Not / Açıklama (ENTER ↵ ile KAYDET)</label>
+              <input
+                ref={noteInputRef}
+                type="text"
+                className="form-control"
+                placeholder="Ekstra istekler..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onKeyDown={handleNoteKeyDown}
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn btn-emerald btn-full mt-4" style={{ padding: '16px', fontSize: '1.05rem' }}>

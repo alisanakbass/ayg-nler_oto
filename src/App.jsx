@@ -4,6 +4,7 @@ import { MobileNav } from './components/MobileNav';
 import { Dashboard } from './components/Dashboard';
 import { IncomeTab } from './components/IncomeTab';
 import { ExpenseTab } from './components/ExpenseTab';
+import { LoginModal } from './components/LoginModal';
 import { dataService } from './services/dataService';
 
 const HistoryTab = lazy(() => import('./components/HistoryTab').then(m => ({ default: m.HistoryTab })));
@@ -11,9 +12,12 @@ const ReportsTab = lazy(() => import('./components/ReportsTab').then(m => ({ def
 const ServicesStaffTab = lazy(() => import('./components/ServicesStaffTab').then(m => ({ default: m.ServicesStaffTab })));
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('aygun_is_authenticated') === 'true';
+  });
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [services, setServices] = useState([]);
-  const [staffList, setStaffList] = useState([]);
   const [incomes, setIncomes] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,14 +26,12 @@ export default function App() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [srv, stf, inc, exp] = await Promise.all([
+      const [srv, inc, exp] = await Promise.all([
         dataService.getServices(),
-        dataService.getStaff(),
         dataService.getIncomes(),
         dataService.getExpenses()
       ]);
       setServices(srv || []);
-      setStaffList(stf || []);
       setIncomes(inc || []);
       setExpenses(exp || []);
     } catch (e) {
@@ -42,6 +44,17 @@ export default function App() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  // Auth Handlers
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    localStorage.setItem('aygun_is_authenticated', 'true');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('aygun_is_authenticated');
+  };
 
   // Handlers
   const handleAddIncome = async (newIncome) => {
@@ -75,19 +88,14 @@ export default function App() {
   };
 
   const handleUpdateService = async (id, updatedFields) => {
-    const updated = await dataService.updateService(id, updatedFields);
+    await dataService.updateService(id, updatedFields);
     setServices(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
   };
 
-  const handleAddStaff = async (newStaff) => {
-    const created = await dataService.addStaff(newStaff);
-    setStaffList(prev => [...prev, created]);
-  };
-
-  const handleDeleteStaff = async (id) => {
-    await dataService.deleteStaff(id);
-    setStaffList(prev => prev.filter(st => st.id !== id));
-  };
+  // If user is not authenticated, show Security PIN Modal
+  if (!isAuthenticated) {
+    return <LoginModal onLogin={handleLogin} />;
+  }
 
   return (
     <div className="app-container">
@@ -95,6 +103,8 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
         onOpenSettings={() => setActiveTab('settings')}
       />
 
@@ -154,16 +164,7 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'services_staff' && (
-              <ServicesStaffTab
-                services={services}
-                onAddService={handleAddService}
-                onDeleteService={handleDeleteService}
-                onUpdateService={handleUpdateService}
-              />
-            )}
-
-            {activeTab === 'settings' && (
+            {(activeTab === 'services_staff' || activeTab === 'settings') && (
               <ServicesStaffTab
                 services={services}
                 onAddService={handleAddService}

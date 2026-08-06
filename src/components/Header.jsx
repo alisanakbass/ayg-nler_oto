@@ -1,8 +1,7 @@
 import React from 'react';
-import { Car, Database, Sparkles, LayoutDashboard, PlusCircle, MinusCircle, History, BarChart3, Settings } from 'lucide-react';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { Car, LayoutDashboard, PlusCircle, MinusCircle, History, BarChart3, Settings, LogOut, Lock } from 'lucide-react';
 
-export function Header({ activeTab, setActiveTab, onOpenSettings }) {
+export function Header({ activeTab, setActiveTab, isAuthenticated, onLogout }) {
   return (
     <header className="app-header">
       <div className="brand-logo">
@@ -61,6 +60,20 @@ export function Header({ activeTab, setActiveTab, onOpenSettings }) {
         </button>
       </nav>
 
+      {/* Security Status & Lock Button */}
+      {isAuthenticated && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={onLogout}
+            title="Sistemi Kilitle"
+            style={{ padding: '8px 14px', color: '#f87171', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Lock size={16} />
+            <span>Kilitle</span>
+          </button>
+        </div>
+      )}
     </header>
   );
 }

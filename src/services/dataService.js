@@ -219,5 +219,17 @@ export const dataService = {
     const updated = current.filter(item => item.id !== id);
     setLocal('aygun_staff', updated);
     return true;
+  },
+
+  async updateStaff(id, updatedFields) {
+    staffCache = null; // Invalidate cache
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.from('staff').update(updatedFields).eq('id', id).select();
+      if (!error && data) return data[0];
+    }
+    const current = getLocal('aygun_staff', INITIAL_STAFF);
+    const updated = current.map(item => item.id === id ? { ...item, ...updatedFields } : item);
+    setLocal('aygun_staff', updated);
+    return { id, ...updatedFields };
   }
 };
