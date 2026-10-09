@@ -5,6 +5,7 @@ export function HistoryTab({ incomes = [], expenses = [], onDeleteIncome, onDele
   const [filterType, setFilterType] = useState('all'); // 'all', 'incomes', 'expenses'
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const itemsPerPage = 12;
 
   // Combine and format history items
@@ -126,7 +127,7 @@ export function HistoryTab({ incomes = [], expenses = [], onDeleteIncome, onDele
                 <tr>
                   <th>Tür</th>
                   <th>Tarih</th>
-                  <th>Açıklama / Plaka</th>
+                  <th>Araç Modeli / Açıklama</th>
                   <th>Detay / Hizmet</th>
                   <th>Ödeme / Kategori</th>
                   <th>Tutar</th>
@@ -150,7 +151,18 @@ export function HistoryTab({ incomes = [], expenses = [], onDeleteIncome, onDele
                     <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.date}</td>
                     <td>
                       {item.type === 'income' ? (
-                        <span className="plate-badge">{item.plate}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {item.photo && (
+                            <img
+                              src={item.photo}
+                              alt={item.plate}
+                              style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--accent-cyan)', cursor: 'pointer', flexShrink: 0 }}
+                              onClick={() => setSelectedPhoto(item.photo)}
+                              title="Fotoğrafı büyüt"
+                            />
+                          )}
+                          <span className="plate-badge">{item.plate}</span>
+                        </div>
                       ) : (
                         <b>{item.title}</b>
                       )}
@@ -214,6 +226,21 @@ export function HistoryTab({ incomes = [], expenses = [], onDeleteIncome, onDele
             >
               Sonraki <ChevronRight size={16} />
             </button>
+          </div>
+        )}
+        {/* Fotoğraf Büyütme Modalı */}
+        {selectedPhoto && (
+          <div 
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <div style={{ position: 'relative', maxWidth: '600px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+              <img src={selectedPhoto} alt="Araç Detayı" style={{ width: '100%', maxHeight: '75vh', objectFit: 'contain', display: 'block', background: '#000' }} />
+              <div style={{ padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Araç Kayıt Fotoğrafı</span>
+                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedPhoto(null)}>Kapat</button>
+              </div>
+            </div>
           </div>
         )}
       </div>

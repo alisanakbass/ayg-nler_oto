@@ -116,6 +116,9 @@ export const dataService = {
   async addIncome(income) {
     const formattedIncome = {
       ...income,
+      plate: income.plate?.trim() || income.vehicle_model || `${income.vehicle_type || 'Araç'} (${new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})`,
+      vehicle_model: income.vehicle_model || '',
+      photo: income.photo || '',
       amount: Number(income.amount),
       date: income.date || new Date().toISOString().split('T')[0]
     };

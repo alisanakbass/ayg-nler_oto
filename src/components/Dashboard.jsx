@@ -263,7 +263,7 @@ export function Dashboard({ incomes = [], expenses = [], onNavigate }) {
               <thead>
                 <tr>
                   <th>Tarih</th>
-                  <th>Plaka</th>
+                  <th>Araç Modeli</th>
                   <th>Araç Tipi</th>
                   <th>Hizmet</th>
                   <th>Ödeme</th>
@@ -275,7 +275,16 @@ export function Dashboard({ incomes = [], expenses = [], onNavigate }) {
                   <tr key={item.id}>
                     <td>{item.date}</td>
                     <td>
-                      <span className="plate-badge">{item.plate}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {item.photo && (
+                          <img
+                            src={item.photo}
+                            alt={item.plate}
+                            style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', border: '1px solid var(--accent-cyan)', flexShrink: 0 }}
+                          />
+                        )}
+                        <span className="plate-badge">{item.plate}</span>
+                      </div>
                     </td>
                     <td>{item.vehicle_type}</td>
                     <td>{item.service_name}</td>
