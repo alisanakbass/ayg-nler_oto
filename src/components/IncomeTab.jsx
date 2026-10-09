@@ -162,13 +162,11 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
 
     const newIncome = {
       plate: finalModel, // Açıklama ve Plaka alanına doğrudan Araç Modeli yazılır
-      vehicle_model: finalModel,
       vehicle_type: detectedCategory,
       service_name: quickServiceName,
       amount: quickTotalAmount,
       payment_type: 'Nakit',
       staff_name: '',
-      photo: '', // Fotoğraf veritabanına kaydedilmez
       note: 'Hızlı Yıkama',
       date: new Date().toISOString().split('T')[0]
     };

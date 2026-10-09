@@ -114,21 +114,34 @@ export const dataService = {
   },
 
   async addIncome(income) {
-    const formattedIncome = {
-      ...income,
-      plate: income.plate?.trim() || income.vehicle_model || `${income.vehicle_type || 'Araç'} (${new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})`,
-      vehicle_model: income.vehicle_model || '',
-      photo: income.photo || '',
-      amount: Number(income.amount),
-      date: income.date || new Date().toISOString().split('T')[0]
+    const modelOrPlate = income.plate?.trim() || income.vehicle_model?.trim() || 'Araç';
+    const amountVal = Number(income.amount) || 0;
+    const dateVal = income.date || new Date().toISOString().split('T')[0];
+
+    // Supabase tablosundaki tam şema kolonları (fotoğraf veya tanımsız kolon kesinlikle gönderilmez)
+    const dbPayload = {
+      plate: modelOrPlate,
+      vehicle_type: income.vehicle_type || 'Binek',
+      service_name: income.service_name || 'Yıkama',
+      amount: amountVal,
+      payment_type: income.payment_type || 'Nakit',
+      staff_name: income.staff_name || '',
+      note: income.note || '',
+      date: dateVal
     };
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('incomes').insert([formattedIncome]).select();
-      if (!error && data) return data[0];
+      const { data, error } = await supabase.from('incomes').insert([dbPayload]).select();
+      if (!error && data && data[0]) {
+        return data[0];
+      }
+      if (error) {
+        console.error('Supabase addIncome hatası:', error);
+      }
     }
+
     const current = getLocal('aygun_incomes', []);
-    const newItem = { ...formattedIncome, id: Date.now().toString(), created_at: new Date().toISOString() };
+    const newItem = { ...dbPayload, id: Date.now().toString(), created_at: new Date().toISOString() };
     const updated = [newItem, ...current];
     setLocal('aygun_incomes', updated);
     return newItem;
