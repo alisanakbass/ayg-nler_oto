@@ -1,4 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { Camera } from 'lucide-react';
 import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { Dashboard } from './components/Dashboard';
@@ -21,6 +22,8 @@ export default function App() {
   const [incomes, setIncomes] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [externalPhoto, setExternalPhoto] = useState(null);
+  const mobileCameraInputRef = useRef(null);
 
   // Load initial data
   const loadAllData = async () => {
@@ -54,6 +57,15 @@ export default function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('aygun_is_authenticated');
+  };
+
+  // Mobile Quick Camera Capture Handler
+  const handleMobileCameraCapture = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExternalPhoto({ file, timestamp: Date.now() });
+    setActiveTab('incomes');
+    e.target.value = '';
   };
 
   // Handlers
@@ -132,6 +144,7 @@ export default function App() {
               onAddIncome={handleAddIncome}
               onDeleteIncome={handleDeleteIncome}
               onAddService={handleAddService}
+              externalPhoto={externalPhoto}
             />
           )}
 
@@ -175,6 +188,26 @@ export default function App() {
           </Suspense>
         </main>
       )}
+
+      {/* Mobil Sol Alt Yüzen Hızlı Fotoğraf Butonu */}
+      <button
+        type="button"
+        className="mobile-fab-camera"
+        onClick={() => mobileCameraInputRef.current?.click()}
+        title="Hızlı Araç Fotoğrafı Çek"
+        aria-label="Hızlı Araç Fotoğrafı Çek"
+      >
+        <Camera size={26} />
+      </button>
+
+      <input
+        ref={mobileCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleMobileCameraCapture}
+      />
 
       {/* Mobile Bottom Navigation */}
       <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />

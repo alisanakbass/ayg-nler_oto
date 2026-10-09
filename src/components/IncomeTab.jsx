@@ -21,7 +21,7 @@ import {
 
 const VEHICLE_CATEGORIES = ['Ticari / Minibüs', 'Binek', 'SUV / Arazi', 'Motosiklet'];
 
-export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddService }) {
+export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddService, externalPhoto = null }) {
   // Aktif Giriş Modu: 'quick_camera' (Varsayılan - Fotoğraflı Hızlı) veya 'classic_form' (Klasik Detaylı)
   const [entryMode, setEntryMode] = useState('quick_camera');
 
@@ -78,8 +78,7 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
   // ==========================================
   // FOTOĞRAF ÇEKME & AI ANALİZİ
   // ==========================================
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const processPhotoFile = async (file) => {
     if (!file) return;
 
     try {
@@ -109,6 +108,21 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
       console.error('Fotoğraf işleme hatası:', err);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  // Harici kameradan (sol alttaki mobil butondan) fotoğraf gelirse anında işle
+  useEffect(() => {
+    if (externalPhoto?.file) {
+      setEntryMode('quick_camera');
+      processPhotoFile(externalPhoto.file);
+    }
+  }, [externalPhoto]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processPhotoFile(file);
     }
   };
 

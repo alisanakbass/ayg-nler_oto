@@ -180,6 +180,46 @@ h1, h2, h3, h4, h5, h6 {
   .mobile-nav {
     display: none;
   }
+  .mobile-fab-camera {
+    display: none !important;
+  }
+}
+
+/* Mobile Floating Camera Action Button (Sol Alt) */
+.mobile-fab-camera {
+  position: fixed;
+  bottom: 82px;
+  left: 16px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 22px rgba(6, 182, 212, 0.5), 0 0 15px rgba(59, 130, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  z-index: 1050;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+  animation: fab-pulse 2.5s infinite;
+}
+
+.mobile-fab-camera:active {
+  transform: scale(0.92);
+}
+
+@keyframes fab-pulse {
+  0% {
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5), 0 0 0 0 rgba(6, 182, 212, 0.6);
+  }
+  70% {
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5), 0 0 0 14px rgba(6, 182, 212, 0);
+  }
+  100% {
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5), 0 0 0 0 rgba(6, 182, 212, 0);
+  }
 }
 
 .mobile-nav-item {
