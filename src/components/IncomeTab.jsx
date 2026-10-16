@@ -10,7 +10,12 @@ import {
   Image as ImageIcon,
   Check,
   Key,
-  Info
+  Info,
+  AlertTriangle,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw
 } from 'lucide-react';
 import { 
   compressImage, 
@@ -35,6 +40,12 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
   const [detectedPlate, setDetectedPlate] = useState('');
   const [selectedQuickServiceIds, setSelectedQuickServiceIds] = useState([]);
   const [quickSuccess, setQuickSuccess] = useState('');
+
+  // Gelişmiş Log & Hata Durumları
+  const [lastLog, setLastLog] = useState(null);
+  const [showLogDetails, setShowLogDetails] = useState(false);
+  const [copiedLog, setCopiedLog] = useState(false);
+  const [lastFile, setLastFile] = useState(null);
   
   // Gemini API Anahtarı Modal Durumu
   const [showKeyModal, setShowKeyModal] = useState(false);
@@ -76,20 +87,26 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
   }, [vehicleType]);
 
   // ==========================================
-  // FOTOĞRAF ÇEKME & AI ANALİZİ
+  // FOTOĞRAF ÇEKME & AI ANALİZİ (GELİŞMİŞ LOGLU)
   // ==========================================
   const processPhotoFile = async (file) => {
     if (!file) return;
+
+    // Yükleme animasyonunu anında başlat ve önceki logu sıfırla
+    setIsAnalyzing(true);
+    setLastLog(null);
+    setLastFile(file);
 
     try {
       // 1. Görseli optimize et ve sıkıştır (500px, süper hızlı)
       const compressed = await compressImage(file, 500, 0.75);
       setPhoto(compressed);
-      setIsAnalyzing(true);
 
-      // 2. Gemini 3.1 Flash-Lite ile doğrudan tespit
+      // 2. Gemini 3.1 Flash-Lite ile tespit
       const result = await identifyVehicleFromImage(compressed);
-      if (result) {
+      setLastLog(result);
+
+      if (result.success) {
         const cat = result.vehicleType || 'Ticari / Minibüs';
         const guess = result.modelGuess || 'Araç';
         setDetectedCategory(cat);
@@ -103,9 +120,26 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
         if (matchingServices.length > 0) {
           setSelectedQuickServiceIds([matchingServices[0].id]);
         }
+      } else {
+        // Hata olsa dahi kullanıcıyı kilitleme, mevcut kategori servislerini hazır tut
+        const fallbackServices = services.filter(s => (s.vehicle_type || 'Binek') === detectedCategory);
+        if (fallbackServices.length > 0 && selectedQuickServiceIds.length === 0) {
+          setSelectedQuickServiceIds([fallbackServices[0].id]);
+        }
       }
     } catch (err) {
       console.error('Fotoğraf işleme hatası:', err);
+      setLastLog({
+        success: false,
+        latencyMs: 0,
+        error: {
+          code: 'CLIENT_ERROR',
+          title: 'İşleme Hatası',
+          message: 'Fotoğraf işlenirken yerel bir hata oluştu.',
+          technicalDetails: err.stack || err.message || String(err),
+          timestamp: new Date().toISOString()
+        }
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -124,6 +158,36 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
     if (file) {
       await processPhotoFile(file);
     }
+    // Tekrar aynı dosya seçildiğinde onChange tetiklensin diye sıfırla
+    e.target.value = '';
+  };
+
+  const handleRetryAnalysis = async () => {
+    if (lastFile) {
+      await processPhotoFile(lastFile);
+    } else if (photo) {
+      setIsAnalyzing(true);
+      setLastLog(null);
+      try {
+        const result = await identifyVehicleFromImage(photo);
+        setLastLog(result);
+        if (result.success) {
+          setDetectedCategory(result.vehicleType);
+          setDetectedModel(result.modelGuess);
+          if (result.plate) setDetectedPlate(result.plate);
+        }
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }
+  };
+
+  const handleCopyLog = () => {
+    if (!lastLog) return;
+    const logText = JSON.stringify(lastLog, null, 2);
+    navigator.clipboard.writeText(logText);
+    setCopiedLog(true);
+    setTimeout(() => setCopiedLog(false), 2000);
   };
 
   const handleToggleQuickService = (serviceId) => {
@@ -149,11 +213,9 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
   const quickTotalAmount = selectedServicesList.reduce((acc, curr) => acc + Number(curr.price || 0), 0);
   const quickServiceName = selectedServicesList.map(s => s.name).join(' + ') || 'Yıkama';
 
-  // ==========================================
-  // HIZLI FOTOĞRAFLI KAYIT GÖNDERME (1 TIKLA)
-  // ==========================================
   const handleQuickSubmit = async () => {
     const finalModel = detectedModel.trim() || 'Araç';
+    const finalPlate = detectedPlate.trim().toUpperCase();
 
     if (selectedQuickServiceIds.length === 0) {
       alert('Lütfen bir yıkama türü seçiniz (İç Dış, Sadece Dış vb.).');
@@ -161,7 +223,7 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
     }
 
     const newIncome = {
-      plate: finalModel, // Açıklama ve Plaka alanına doğrudan Araç Modeli yazılır
+      plate: finalPlate ? `${finalPlate} - ${finalModel}` : finalModel,
       vehicle_type: detectedCategory,
       service_name: quickServiceName,
       amount: quickTotalAmount,
@@ -173,11 +235,13 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
 
     await onAddIncome(newIncome);
 
-    setQuickSuccess(`✨ ${finalModel} (${quickServiceName} - ₺${quickTotalAmount}) onaylandı!`);
+    setQuickSuccess(`✨ ${finalPlate ? finalPlate + ' ' : ''}${finalModel} (${quickServiceName} - ₺${quickTotalAmount}) onaylandı!`);
     setTimeout(() => setQuickSuccess(''), 4000);
 
     // Formu temizle ve bir sonraki araca hazırla
     setPhoto(null);
+    setLastLog(null);
+    setDetectedPlate('');
     setSelectedQuickServiceIds([]);
   };
 
@@ -477,50 +541,168 @@ export function IncomeTab({ services = [], staffList = [], onAddIncome, onAddSer
                 </div>
               </div>
             ) : (
-              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '16px', padding: '14px', border: '1px solid var(--border-color)', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', width: '130px', height: '95px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-color)' }}>
+              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border-color)', display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative', width: '130px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-color)' }}>
                   <img src={photo} alt="Çekilen Araç" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   {isAnalyzing && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <RefreshCw size={24} className="text-cyan" style={{ animation: 'spin 1s linear infinite' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <RefreshCw size={26} className="text-cyan" style={{ animation: 'spin 1s linear infinite' }} />
+                      <span style={{ fontSize: '0.7rem', color: '#fff', fontWeight: 600 }}>Taranıyor...</span>
                     </div>
                   )}
                 </div>
 
-                <div style={{ flex: 1, minWidth: '220px' }}>
-                  {isAnalyzing ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-cyan)' }}>
+                <div style={{ flex: 1, minWidth: '240px' }}>
+                  {/* Yükleniyor Durumu */}
+                  {isAnalyzing && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-cyan)', marginBottom: '10px' }}>
                       <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                      <span style={{ fontWeight: 600 }}>Araç Modeli Tanınıyor...</span>
+                      <span style={{ fontWeight: 600 }}>Google Gemini Araç & Plaka Analizi Yapıyor...</span>
                     </div>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Check size={12} /> Tespit Edildi
-                        </span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{detectedCategory}</span>
+                  )}
+
+                  {/* Gelişmiş Hata Paneli */}
+                  {!isAnalyzing && lastLog?.error && (
+                    <div style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171', fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px' }}>
+                        <AlertTriangle size={18} />
+                        <span>{lastLog.error.title}</span>
                       </div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                        {detectedModel}
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '10px', lineHeight: 1.4 }}>
+                        {lastLog.error.message}
+                      </p>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={handleRetryAnalysis}
+                          style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                        >
+                          <RotateCcw size={13} /> Tekrar Dene
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-secondary"
+                          onClick={handleCopyLog}
+                          style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                        >
+                          <Copy size={13} /> {copiedLog ? '✓ Kopyalandı' : 'Logu Kopyala'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => setShowLogDetails(!showLogDetails)}
+                          style={{
+                            fontSize: '0.75rem',
+                            padding: '5px 10px',
+                            background: 'transparent',
+                            color: 'var(--text-muted)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {showLogDetails ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          {showLogDetails ? 'Ayrıntıları Gizle' : 'Teknik Log'}
+                        </button>
+                      </div>
+
+                      {/* Açılır Teknik Log Kutusu */}
+                      {showLogDetails && (
+                        <div style={{
+                          marginTop: '10px',
+                          background: '#090d16',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '8px',
+                          padding: '10px',
+                          fontSize: '0.72rem',
+                          fontFamily: 'Consolas, Monaco, monospace',
+                          color: '#94a3b8',
+                          maxHeight: '160px',
+                          overflowY: 'auto',
+                          wordBreak: 'break-all'
+                        }}>
+                          <div style={{ color: '#38bdf8', marginBottom: '4px' }}>// Hata Ayrıntı Dökümü</div>
+                          <div><b>Kod:</b> {lastLog.error.code}</div>
+                          {lastLog.error.httpStatus && <div><b>HTTP Status:</b> {lastLog.error.httpStatus}</div>}
+                          <div><b>Süre:</b> {lastLog.latencyMs}ms</div>
+                          <div><b>Zaman:</b> {lastLog.error.timestamp}</div>
+                          <div style={{ marginTop: '4px', color: '#f87171' }}><b>Detay:</b> {lastLog.error.technicalDetails}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Başarılı Durum Bildirimi */}
+                  {!isAnalyzing && lastLog?.success && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', padding: '3px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Check size={12} strokeWidth={3} /> Başarıyla Tespit Edildi
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({lastLog.latencyMs}ms)</span>
+                    </div>
+                  )}
+
+                  {/* Düzenlenebilir Araç Modeli ve Plaka Alanları */}
+                  {!isAnalyzing && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>
+                          Araç Modeli (Gerekirse Düzenleyin):
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={detectedModel}
+                          onChange={(e) => setDetectedModel(e.target.value)}
+                          placeholder="Örn: Ford Courier, Clio..."
+                          style={{ fontSize: '0.95rem', fontWeight: 700, padding: '8px 12px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>
+                          Plaka (Varsa):
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={detectedPlate}
+                          onChange={(e) => setDetectedPlate(e.target.value.toUpperCase())}
+                          placeholder="34 ABC 123 (İsteğe bağlı)"
+                          style={{ fontSize: '0.95rem', fontWeight: 700, padding: '8px 12px', letterSpacing: '0.5px' }}
+                        />
                       </div>
                     </div>
                   )}
 
+                  {/* Fotoğraf Butonları */}
                   <div className="flex-center gap-2 mt-2" style={{ justifyContent: 'flex-start' }}>
                     <button
                       type="button"
                       className="btn btn-sm btn-secondary"
                       onClick={() => cameraInputRef.current?.click()}
-                      style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px' }}
                     >
                       <RefreshCw size={12} /> Tekrar Çek
                     </button>
                     <button
                       type="button"
                       className="btn btn-sm btn-danger"
-                      onClick={() => setPhoto(null)}
-                      style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      onClick={() => {
+                        setPhoto(null);
+                        setLastLog(null);
+                        setDetectedPlate('');
+                      }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px' }}
                     >
                       Kaldır
                     </button>
